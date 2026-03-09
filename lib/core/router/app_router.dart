@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
-import '../features/auth/bindings/auth_binding.dart';
-import '../features/auth/views/login_screen.dart';
+import '../../features/auth/bindings/auth_binding.dart';
+import '../../features/auth/views/login_screen.dart';
 import 'package:flutter/material.dart';
 
 class AppRoutes {

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../data/repositories/auth_repository.dart';
-import '../data/models/user_model.dart';
 
 class AuthController extends GetxController {
   final AuthRepository _repository;
@@ -25,10 +24,7 @@ class AuthController extends GetxController {
 
     try {
       isLoading.value = true;
-      final response = await _repository.login(
-        phoneController.text,
-        passwordController.text,
-      );
+      await _repository.login(phoneController.text, passwordController.text);
 
       // Save token and navigate (logic to be implemented in AuthService)
       Get.offAllNamed('/dashboard'); // Placeholder
