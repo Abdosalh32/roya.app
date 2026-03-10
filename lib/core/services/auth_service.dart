@@ -1,26 +1,27 @@
-import 'package:get/get.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+// lib/core/services/auth_service.dart
 
+import 'package:flutter/foundation.dart';
+import 'package:get/get.dart';
+import '../../core/storage/secure_storage.dart';
+
+/// ─────────────────────────────────────────────────
+/// خدمة المصادقة — تُدير حالة تسجيل الدخول
+/// تُسجَّل كـ GetxService لتبقى طوال دورة حياة التطبيق
+/// ─────────────────────────────────────────────────
 class AuthService extends GetxService {
-  final _storage = const FlutterSecureStorage();
-  final _isLoggedIn = false.obs;
+  final RxBool _isLoggedIn = false.obs;
 
   bool get isLoggedIn => _isLoggedIn.value;
+  RxBool get isLoggedInObs => _isLoggedIn;
 
   Future<AuthService> init() async {
-    final token = await _storage.read(key: 'token');
-    _isLoggedIn.value = token != null;
+    _isLoggedIn.value = await SecureStorage.isLoggedIn();
+    debugPrint('✅ AuthService init — isLoggedIn: ${_isLoggedIn.value}');
     return this;
   }
 
-  Future<void> saveToken(String token) async {
-    await _storage.write(key: 'token', value: token);
-    _isLoggedIn.value = true;
-  }
-
   Future<void> logout() async {
-    await _storage.delete(key: 'token');
+    await SecureStorage.clearAll();
     _isLoggedIn.value = false;
-    Get.offAllNamed('/login');
   }
 }

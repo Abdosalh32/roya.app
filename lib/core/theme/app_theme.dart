@@ -1,25 +1,24 @@
+// lib/core/theme/app_theme.dart
+
 import 'package:flutter/material.dart';
 import '../utils/app_constants.dart';
 
+/// ─────────────────────────────────────────────────
+/// ثيم التطبيق — يستخدم AppColors فقط
+/// ─────────────────────────────────────────────────
 class AppTheme {
-  static final light = ThemeData(
+  AppTheme._();
+
+  static final ThemeData light = ThemeData(
+    useMaterial3: true,
     primaryColor: AppColors.primary,
     scaffoldBackgroundColor: AppColors.background,
-    fontFamily: 'Cairo', // Using the downloaded font
+    fontFamily: 'Cairo',
     colorScheme: ColorScheme.fromSeed(
       seedColor: AppColors.primary,
-      secondary: AppColors.accent,
-      surface: AppColors.surface,
-      error: AppColors.error,
-    ),
-    textTheme: const TextTheme(
-      displayLarge: TextStyle(
-        fontSize: 32,
-        fontWeight: FontWeight.bold,
-        color: AppColors.textBody,
-      ),
-      bodyLarge: TextStyle(fontSize: 16, color: AppColors.textBody),
-      bodyMedium: TextStyle(fontSize: 14, color: AppColors.textGrey),
+      secondary: AppColors.secondary,
+      surface: AppColors.card,
+      error: AppColors.danger,
     ),
     appBarTheme: const AppBarTheme(
       backgroundColor: AppColors.primary,
@@ -30,7 +29,33 @@ class AppTheme {
         fontFamily: 'Cairo',
         fontSize: 18,
         fontWeight: FontWeight.bold,
+        color: Colors.white,
       ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: AppColors.background,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppColors.border),
+      ),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        textStyle: AppTextStyles.labelButton,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
+    ),
+    textTheme: const TextTheme(
+      displayLarge: AppTextStyles.displayLarge,
+      headlineLarge: AppTextStyles.headingLarge,
+      headlineMedium: AppTextStyles.headingMedium,
+      headlineSmall: AppTextStyles.headingSmall,
+      bodyLarge: AppTextStyles.bodyLarge,
+      bodyMedium: AppTextStyles.bodyMedium,
+      bodySmall: AppTextStyles.bodySmall,
     ),
   );
 }

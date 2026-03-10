@@ -1,35 +1,75 @@
+// lib/features/auth/controllers/auth_controller.dart
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
+import '../data/models/login_model.dart';
 import '../data/repositories/auth_repository.dart';
+import '../../../../core/storage/secure_storage.dart';
+import '../../../../core/utils/app_constants.dart';
 
+/// ─────────────────────────────────────────────────
+/// متحكم تسجيل الدخول
+/// يُدير الحالة ومنطق الأعمال لشاشة تسجيل الدخول
+/// ─────────────────────────────────────────────────
 class AuthController extends GetxController {
   final AuthRepository _repository;
 
   AuthController(this._repository);
 
+  // ─── TextEditingControllers ─────────────────────
   final phoneController = TextEditingController();
   final passwordController = TextEditingController();
 
-  final isLoading = false.obs;
+  // ─── مفتاح النموذج للتحقق من المُدخلات ──────────
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
-  Future<void> login() async {
-    if (phoneController.text.isEmpty || passwordController.text.isEmpty) {
-      Get.snackbar(
-        'Error',
-        'Please fill all fields',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-      return;
-    }
+  // ─── الحالات التفاعلية ──────────────────────────
+  final RxBool isLoading = false.obs;
+  final RxString errorMessage = ''.obs;
+  final RxBool isPasswordVisible = false.obs;
+
+  // ─── تبديل ظهور كلمة المرور ─────────────────────
+  void togglePasswordVisibility() {
+    isPasswordVisible.value = !isPasswordVisible.value;
+  }
+
+  /// تسجيل الدخول — يتحقق أولاً ثم يستدعي الـ repository
+  Future<void> login(BuildContext context) async {
+    // إخفاء رسالة الخطأ السابقة
+    errorMessage.value = '';
+
+    // التحقق من صحة النموذج
+    if (!formKey.currentState!.validate()) return;
 
     try {
       isLoading.value = true;
-      await _repository.login(phoneController.text, passwordController.text);
 
-      // Save token and navigate (logic to be implemented in AuthService)
-      Get.offAllNamed('/dashboard'); // Placeholder
+      final request = LoginRequestModel(
+        phone: phoneController.text.trim(),
+        password: passwordController.text,
+      );
+
+      final response = await _repository.login(request);
+
+      // حفظ بيانات المصادقة في التخزين الآمن
+      if (response.token != null) {
+        await SecureStorage.saveToken(response.token!);
+      }
+      if (response.user?.id != null) {
+        await SecureStorage.saveUserId(response.user!.id!);
+      }
+      if (response.user?.shop?.id != null) {
+        await SecureStorage.saveShopId(response.user!.shop!.id!);
+      }
+
+      // الانتقال إلى لوحة التحكم باستخدام GoRouter
+      if (context.mounted) {
+        context.go(RouteNames.dashboard);
+      }
     } catch (e) {
-      Get.snackbar('Error', e.toString(), snackPosition: SnackPosition.BOTTOM);
+      // عرض رسالة الخطأ تحت النموذج مباشرةً
+      errorMessage.value = e.toString();
     } finally {
       isLoading.value = false;
     }
