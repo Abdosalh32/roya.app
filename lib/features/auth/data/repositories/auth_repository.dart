@@ -3,8 +3,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
-import '../../../../core/network/api_client.dart';
-import '../../../../core/utils/app_constants.dart';
 import '../models/login_model.dart';
 
 /// ─────────────────────────────────────────────────
@@ -12,29 +10,33 @@ import '../models/login_model.dart';
 /// لا يحتوي على أي منطق تجاري (business logic)
 /// ─────────────────────────────────────────────────
 class AuthRepository extends GetxService {
-  // استخدام DioClient المسجَّل في GetX
-  Dio get _dio => Get.find<DioClient>().dio;
+  // استخدام البيانات الوهمية حالياً بدلاً من Dio
 
   /// تسجيل الدخول — يُرسل بيانات المستخدم ويُعيد الاستجابة
   Future<LoginResponseModel> login(LoginRequestModel request) async {
     try {
-      final response = await _dio.post(
-        ApiEndpoints.login,
-        data: request.toJson(),
-      );
+      // محاكاة تأخير الشبكة لتجربة الواجهة
+      await Future.delayed(const Duration(seconds: 2));
 
-      final result = LoginResponseModel.fromJson(
-        response.data as Map<String, dynamic>,
-      );
-
-      // التحقق من حالة الاستجابة حتى لو كان الـ HTTP 200
-      if (!result.status) {
-        throw result.message.isNotEmpty
-            ? result.message
-            : 'فشل تسجيل الدخول. حاول مجدداً.';
-      }
-
-      return result;
+      // إرجاع بيانات وهمية (Mock Data)
+      return LoginResponseModel.fromJson({
+        'status': true,
+        'message': 'تم تسجيل الدخول بنجاح',
+        'data': {
+          'token': 'mock_token_123456789',
+          'user': {
+            'id': 1,
+            'name': 'صاحب المتجر الوهمي',
+            'phone': request.phone,
+            'shop': {
+              'id': 1,
+              'name': 'Bary Store',
+              'logo':
+                  'https://ui-avatars.com/api/?name=متجر+الأناقة&background=0A2342&color=fff',
+            },
+          },
+        },
+      });
     } on DioException catch (e) {
       debugPrint('❌ AuthRepository.login DioException: ${e.message}');
       _handleDioException(e);

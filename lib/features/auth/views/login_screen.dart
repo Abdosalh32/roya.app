@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
-import '../../../../core/utils/app_constants.dart';
+import 'package:roya/core/theme/app_colors.dart';
+import 'package:roya/core/theme/app_text_styles.dart';
+import 'package:roya/core/utils/app_constants.dart';
 
 /// ─────────────────────────────────────────────────
 /// شاشة تسجيل الدخول
@@ -81,7 +83,7 @@ class _TopSection extends StatelessWidget {
             SizedBox(height: 16.h),
             // اسم التطبيق
             Text(
-              AppConstants.appName,
+              'app_name'.tr,
               style: TextStyle(
                 fontFamily: 'Cairo',
                 fontSize: 32.sp,
@@ -92,7 +94,7 @@ class _TopSection extends StatelessWidget {
             SizedBox(height: 6.h),
             // العنوان الفرعي
             Text(
-              AppConstants.appSubtitle,
+              'app_subtitle'.tr,
               style: TextStyle(
                 fontFamily: 'Cairo',
                 fontSize: 14.sp,
@@ -135,7 +137,7 @@ class _LoginCard extends StatelessWidget {
             children: [
               // عنوان النموذج
               Text(
-                'تسجيل الدخول',
+                'login_title'.tr,
                 style: AppTextStyles.headingLarge,
                 textAlign: TextAlign.right,
               ),
@@ -189,7 +191,7 @@ class _PhoneField extends StatelessWidget {
       textAlign: TextAlign.right,
       style: AppTextStyles.bodyLarge,
       decoration: _inputDecoration(
-        label: 'رقم الهاتف',
+        label: 'phone_label'.tr,
         prefixIcon: const Icon(
           Icons.phone_outlined,
           color: AppColors.textSecondary,
@@ -197,10 +199,10 @@ class _PhoneField extends StatelessWidget {
       ),
       validator: (value) {
         final phone = value?.trim() ?? '';
-        if (phone.isEmpty) return 'رقم الهاتف مطلوب';
+        if (phone.isEmpty) return 'phone_required'.tr;
         // أرقام ليبيا تبدأ بـ 09 وطولها 10 أرقام
         if (!RegExp(r'^09\d{8}$').hasMatch(phone)) {
-          return 'أدخل رقم هاتف ليبي صحيح (09xxxxxxxx)';
+          return 'phone_invalid'.tr;
         }
         return null;
       },
@@ -224,7 +226,7 @@ class _PasswordField extends StatelessWidget {
         textAlign: TextAlign.right,
         style: AppTextStyles.bodyLarge,
         decoration: _inputDecoration(
-          label: 'كلمة المرور',
+          label: 'password_label'.tr,
           prefixIcon: const Icon(
             Icons.lock_outline,
             color: AppColors.textSecondary,
@@ -241,9 +243,9 @@ class _PasswordField extends StatelessWidget {
         ),
         validator: (value) {
           final pass = value ?? '';
-          if (pass.isEmpty) return 'كلمة المرور مطلوبة';
+          if (pass.isEmpty) return 'password_required'.tr;
           if (pass.length < 6) {
-            return 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+            return 'password_short'.tr;
           }
           return null;
         },
@@ -330,7 +332,7 @@ class _LoginButton extends StatelessWidget {
                         strokeWidth: 2.5,
                       ),
                     )
-                  : Text('تسجيل الدخول', style: AppTextStyles.labelButton),
+                  : Text('login_button'.tr, style: AppTextStyles.labelButton),
             ),
           ),
         ),

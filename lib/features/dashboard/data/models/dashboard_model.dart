@@ -1,7 +1,8 @@
 // lib/features/dashboard/data/models/dashboard_model.dart
 
 import 'package:flutter/material.dart';
-import '../../../../core/utils/app_constants.dart';
+import 'package:get/get.dart';
+import 'package:roya/core/theme/app_colors.dart';
 
 class DashboardModel {
   final ShopInfoModel shop;
@@ -114,17 +115,17 @@ class RecentOrderModel {
   String get statusLabel {
     switch (status) {
       case 'new':
-        return 'جديد';
+        return 'status_new'.tr;
       case 'confirmed':
-        return 'تم التأكيد';
+        return 'status_confirmed'.tr;
       case 'accepted':
-        return 'مقبول';
+        return 'status_accepted'.tr;
       case 'delivered':
-        return 'تم التوصيل';
+        return 'status_delivered'.tr;
       case 'rejected':
-        return 'مرفوض';
+        return 'status_rejected'.tr;
       case 'cancelled':
-        return 'ملغي';
+        return 'status_cancelled'.tr;
       default:
         return status;
     }

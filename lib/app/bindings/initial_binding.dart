@@ -3,6 +3,7 @@
 import 'package:get/get.dart';
 import '../../core/network/api_client.dart';
 import '../../core/services/auth_service.dart';
+import '../../core/services/order_service.dart';
 import '../../features/auth/controllers/auth_controller.dart';
 import '../../features/auth/data/repositories/auth_repository.dart';
 import '../../features/dashboard/controllers/dashboard_controller.dart';
@@ -17,6 +18,7 @@ class InitialBinding extends Bindings {
     // ─── خدمات الشبكة والمصادقة (GetxService) ───────
     Get.putAsync(() => DioClient().init());
     Get.putAsync(() => AuthService().init());
+    Get.put(OrderService());
 
     // ─── مستودع ومتحكم المصادقة ───────────────────
     Get.lazyPut<AuthRepository>(() => AuthRepository());

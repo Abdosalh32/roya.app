@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../data/models/login_model.dart';
 import '../data/repositories/auth_repository.dart';
 import '../../../../core/storage/secure_storage.dart';
-import '../../../../core/utils/app_constants.dart';
+import 'package:roya/core/router/route_names.dart';
 
 /// ─────────────────────────────────────────────────
 /// متحكم تسجيل الدخول

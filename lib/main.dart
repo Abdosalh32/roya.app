@@ -8,6 +8,8 @@ import 'app/bindings/initial_binding.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/services/app_lifecycle.dart';
+import 'core/localization/app_translations.dart';
+import 'core/localization/localization_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,11 +27,16 @@ void main() async {
   // تهيئة مراقب دورة حياة التطبيق
   initLifecycleObserver();
 
-  runApp(const RoyaApp());
+  // جلب اللغة المحفوظة
+  final localizationService = Get.put(LocalizationService(), permanent: true);
+  final savedLocale = await localizationService.getSavedLocale();
+
+  runApp(RoyaApp(savedLocale: savedLocale));
 }
 
 class RoyaApp extends StatelessWidget {
-  const RoyaApp({super.key});
+  final Locale savedLocale;
+  const RoyaApp({super.key, required this.savedLocale});
 
   @override
   Widget build(BuildContext context) {
@@ -46,12 +53,15 @@ class RoyaApp extends StatelessWidget {
           routeInformationParser: AppRouter.router.routeInformationParser,
           routerDelegate: AppRouter.router.routerDelegate,
           routeInformationProvider: AppRouter.router.routeInformationProvider,
-          locale: const Locale('ar', 'SA'),
-          fallbackLocale: const Locale('en', 'US'),
+          translations: AppTranslations(),
+          locale: savedLocale,
+          fallbackLocale: LocalizationService.fallbackLocale,
           builder: (context, widget) {
-            // ضمان اتجاه RTL في كل التطبيق
+            // ضمان اتجاه الواجهة حسب اللغة (LTR أو RTL)
             return Directionality(
-              textDirection: TextDirection.rtl,
+              textDirection: Get.locale?.languageCode == 'en'
+                  ? TextDirection.ltr
+                  : TextDirection.rtl,
               child: widget ?? const SizedBox.shrink(),
             );
           },
