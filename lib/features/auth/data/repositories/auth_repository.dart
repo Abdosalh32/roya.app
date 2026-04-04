@@ -3,6 +3,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import 'package:roya/core/network/api_client.dart';
+
 import '../models/login_model.dart';
 
 /// ─────────────────────────────────────────────────
@@ -10,33 +12,47 @@ import '../models/login_model.dart';
 /// لا يحتوي على أي منطق تجاري (business logic)
 /// ─────────────────────────────────────────────────
 class AuthRepository extends GetxService {
-  // استخدام البيانات الوهمية حالياً بدلاً من Dio
+  Dio get _dio => Get.find<DioClient>().dio;
 
   /// تسجيل الدخول — يُرسل بيانات المستخدم ويُعيد الاستجابة
   Future<LoginResponseModel> login(LoginRequestModel request) async {
     try {
-      // محاكاة تأخير الشبكة لتجربة الواجهة
-      await Future.delayed(const Duration(seconds: 2));
+      final response = await _dio.post(
+        '/api/auth/shop-owner/login',
+        data: request.toJson(),
+        options: Options(
+          // Handle expected auth failures gracefully without throwing DioException.
+          validateStatus: (status) => status != null && status < 500,
+        ),
+      );
 
-      // إرجاع بيانات وهمية (Mock Data)
-      return LoginResponseModel.fromJson({
-        'status': true,
-        'message': 'تم تسجيل الدخول بنجاح',
-        'data': {
-          'token': 'mock_token_123456789',
-          'user': {
-            'id': 1,
-            'name': 'صاحب المتجر الوهمي',
-            'phone': request.phone,
-            'shop': {
-              'id': 1,
-              'name': 'Bary Store',
-              'logo':
-                  'https://ui-avatars.com/api/?name=متجر+الأناقة&background=0A2342&color=fff',
-            },
-          },
-        },
-      });
+      final data = (response.data is Map<String, dynamic>)
+          ? response.data as Map<String, dynamic>
+          : <String, dynamic>{};
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        return LoginResponseModel.fromJson(data);
+      }
+
+      if (response.statusCode == 401) {
+        throw data['message']?.toString() ??
+            'رقم الهاتف أو كلمة المرور غير صحيحة.';
+      }
+
+      if (response.statusCode == 422) {
+        final errors = data['errors'] as Map<String, dynamic>?;
+        if (errors != null && errors.isNotEmpty) {
+          final firstErrors = errors.values.first;
+          if (firstErrors is List && firstErrors.isNotEmpty) {
+            throw firstErrors.first.toString();
+          }
+        }
+        throw data['message']?.toString() ?? 'بيانات غير صحيحة.';
+      }
+
+      throw data['message']?.toString() ?? 'فشل تسجيل الدخول.';
     } on DioException catch (e) {
       debugPrint('❌ AuthRepository.login DioException: ${e.message}');
       _handleDioException(e);
@@ -44,6 +60,31 @@ class AuthRepository extends GetxService {
       // re-throw Arabic string errors directly
       if (e is String) rethrow;
       debugPrint('❌ AuthRepository.login unexpected error: $e');
+      throw 'حدث خطأ غير متوقع. حاول مجدداً.';
+    }
+  }
+
+  Future<void> logout() async {
+    try {
+      await _dio.post('/api/auth/shop-owner/logout');
+    } on DioException catch (e) {
+      debugPrint('❌ AuthRepository.logout DioException: ${e.message}');
+      _handleDioException(e);
+    } catch (e) {
+      if (e is String) rethrow;
+      throw 'حدث خطأ غير متوقع. حاول مجدداً.';
+    }
+  }
+
+  Future<LoginResponseModel> refreshToken() async {
+    try {
+      final response = await _dio.post('/api/auth/shop-owner/refresh');
+      return LoginResponseModel.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      debugPrint('❌ AuthRepository.refreshToken DioException: ${e.message}');
+      _handleDioException(e);
+    } catch (e) {
+      if (e is String) rethrow;
       throw 'حدث خطأ غير متوقع. حاول مجدداً.';
     }
   }

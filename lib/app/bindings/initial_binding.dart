@@ -1,6 +1,8 @@
 // lib/app/bindings/initial_binding.dart
 
+import 'package:dio/dio.dart';
 import 'package:get/get.dart';
+
 import '../../core/network/api_client.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/services/order_service.dart';
@@ -16,7 +18,10 @@ class InitialBinding extends Bindings {
   @override
   void dependencies() {
     // ─── خدمات الشبكة والمصادقة (GetxService) ───────
-    Get.putAsync(() => DioClient().init());
+    // register DioClient and also expose the raw Dio instance for modules that expect it
+    Get.putAsync(
+      () => DioClient().init(),
+    ).then((client) => Get.put<Dio>(client.dio));
     Get.putAsync(() => AuthService().init());
     Get.put(OrderService());
 

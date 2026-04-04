@@ -2,19 +2,23 @@
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:roya/core/router/route_names.dart';
+import 'package:roya/core/theme/app_colors.dart';
+import 'package:roya/modules/products/binding.dart';
+import 'package:roya/modules/products/screen.dart';
+
 import '../../core/storage/secure_storage.dart';
 import '../../features/auth/views/login_screen.dart';
 import '../../features/dashboard/views/dashboard_screen.dart';
 import '../../features/dashboard/views/main_shell.dart';
-import '../../features/manual_order/views/create_manual_order_screen.dart';
 import '../../features/manual_order/bindings/manual_order_binding.dart';
-import '../../features/orders/views/orders_screen.dart';
-import '../../features/orders/views/order_detail_screen.dart';
-import '../../features/orders/views/completed_order_detail_screen.dart';
+import '../../features/manual_order/views/create_manual_order_screen.dart';
 import '../../features/orders/controllers/orders_controller.dart';
 import '../../features/orders/data/models/order_detail_model.dart';
-import 'package:roya/core/theme/app_colors.dart';
-import 'package:roya/core/router/route_names.dart';
+import '../../features/orders/views/completed_order_detail_screen.dart';
+import '../../features/orders/views/order_detail_screen.dart';
+import '../../features/orders/views/orders_screen.dart';
+import '../../features/profile/views/profile_screen.dart';
 
 /// ─────────────────────────────────────────────────
 /// راوتر التطبيق باستخدام GoRouter
@@ -84,13 +88,15 @@ class AppRouter {
                   name: 'محفظة جلدية',
                   quantity: 1,
                   price: 85.00,
-                  imageUrl: 'https://images.unsplash.com/photo-1627123424574-724758594e93?w=100',
+                  imageUrl:
+                      'https://images.unsplash.com/photo-1627123424574-724758594e93?w=100',
                 ),
                 const OrderProductItem(
                   name: 'غطاء هاتف',
                   quantity: 1,
                   price: 60.00,
-                  imageUrl: 'https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=100',
+                  imageUrl:
+                      'https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=100',
                 ),
               ],
               paymentMethod: 'الدفع عند الاستلام (COD)',
@@ -134,8 +140,10 @@ class AppRouter {
               GoRoute(
                 path: RouteNames.products,
                 name: 'products',
-                builder: (context, state) =>
-                    const _PlaceholderScreen(title: 'المنتجات'),
+                builder: (context, state) {
+                  ProductsBinding().dependencies();
+                  return ProductsScreen();
+                },
               ),
             ],
           ),
@@ -156,8 +164,7 @@ class AppRouter {
               GoRoute(
                 path: RouteNames.profile,
                 name: 'profile',
-                builder: (context, state) =>
-                    const _PlaceholderScreen(title: 'الملف الشخصي'),
+                builder: (context, state) => const ProfileScreen(),
               ),
             ],
           ),

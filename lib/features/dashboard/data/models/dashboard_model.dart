@@ -9,24 +9,38 @@ class DashboardModel {
   final StatsModel stats;
   final List<WeeklySaleModel> weeklySales;
   final List<RecentOrderModel> recentOrders;
+  final bool? success;
+  final String? message;
 
   DashboardModel({
     required this.shop,
     required this.stats,
     required this.weeklySales,
     required this.recentOrders,
+    this.success,
+    this.message,
   });
 
   factory DashboardModel.fromJson(Map<String, dynamic> json) {
+    final payload = (json['data'] is Map<String, dynamic>)
+        ? json['data'] as Map<String, dynamic>
+        : json;
+
     return DashboardModel(
-      shop: ShopInfoModel.fromJson(json['shop']),
-      stats: StatsModel.fromJson(json['stats']),
-      weeklySales: (json['weekly_sales'] as List)
-          .map((i) => WeeklySaleModel.fromJson(i))
+      shop: ShopInfoModel.fromJson(
+        (payload['shop'] as Map<String, dynamic>?) ?? <String, dynamic>{},
+      ),
+      stats: StatsModel.fromJson(
+        (payload['stats'] as Map<String, dynamic>?) ?? <String, dynamic>{},
+      ),
+      weeklySales: ((payload['weekly_sales'] as List?) ?? const [])
+          .map((i) => WeeklySaleModel.fromJson(i as Map<String, dynamic>))
           .toList(),
-      recentOrders: (json['recent_orders'] as List)
-          .map((i) => RecentOrderModel.fromJson(i))
+      recentOrders: ((payload['recent_orders'] as List?) ?? const [])
+          .map((i) => RecentOrderModel.fromJson(i as Map<String, dynamic>))
           .toList(),
+      success: json['success'] as bool?,
+      message: json['message'] as String?,
     );
   }
 }
@@ -40,9 +54,9 @@ class ShopInfoModel {
 
   factory ShopInfoModel.fromJson(Map<String, dynamic> json) {
     return ShopInfoModel(
-      id: json['id'],
-      name: json['name'],
-      logo: json['logo'],
+      id: json['id'] as int? ?? 0,
+      name: json['name'] as String? ?? '',
+      logo: json['logo'] as String?,
     );
   }
 }
@@ -59,24 +73,51 @@ class StatsModel {
   });
 
   factory StatsModel.fromJson(Map<String, dynamic> json) {
+    double _toDouble(dynamic value) {
+      if (value == null) return 0;
+      if (value is num) return value.toDouble();
+      return double.tryParse(value.toString()) ?? 0;
+    }
+
     return StatsModel(
-      newOrdersCount: json['new_orders_count'] ?? 0,
-      totalSales: (json['total_sales'] ?? 0).toDouble(),
-      totalDue: (json['total_due'] ?? 0).toDouble(),
+      newOrdersCount: json['new_orders_count'] as int? ?? 0,
+      totalSales: _toDouble(json['total_sales']),
+      totalDue: _toDouble(json['total_due']),
     );
   }
 }
 
 class WeeklySaleModel {
-  final String day;
+  final String dayKey;
+  final String dayAr;
+  final String dayEn;
   final double amount;
 
-  WeeklySaleModel({required this.day, required this.amount});
+  WeeklySaleModel({
+    required this.dayKey,
+    required this.dayAr,
+    required this.dayEn,
+    required this.amount,
+  });
+
+  String get day {
+    final isAr = Get.locale?.languageCode != 'en';
+    return isAr ? dayAr : dayEn;
+  }
 
   factory WeeklySaleModel.fromJson(Map<String, dynamic> json) {
+    double _toDouble(dynamic value) {
+      if (value == null) return 0;
+      if (value is num) return value.toDouble();
+      return double.tryParse(value.toString()) ?? 0;
+    }
+
+    final fallbackDay = json['day'] as String? ?? '';
     return WeeklySaleModel(
-      day: json['day'],
-      amount: (json['amount'] ?? 0).toDouble(),
+      dayKey: json['day_key'] as String? ?? '',
+      dayAr: json['day_ar'] as String? ?? fallbackDay,
+      dayEn: json['day_en'] as String? ?? fallbackDay,
+      amount: _toDouble(json['amount']),
     );
   }
 }
@@ -101,14 +142,22 @@ class RecentOrderModel {
   });
 
   factory RecentOrderModel.fromJson(Map<String, dynamic> json) {
+    double _toDouble(dynamic value) {
+      if (value == null) return 0;
+      if (value is num) return value.toDouble();
+      return double.tryParse(value.toString()) ?? 0;
+    }
+
     return RecentOrderModel(
-      id: json['id'],
-      orderNumber: json['order_number'].toString(),
-      customerName: json['customer_name'] ?? 'N/A',
-      regionName: json['region_name'] ?? 'N/A',
-      total: (json['total'] ?? 0).toDouble(),
-      status: json['status'],
-      createdAt: DateTime.parse(json['created_at']),
+      id: json['id'] as int? ?? 0,
+      orderNumber: (json['order_number'] ?? '').toString(),
+      customerName: json['customer_name'] as String? ?? 'N/A',
+      regionName: json['region_name'] as String? ?? 'N/A',
+      total: _toDouble(json['total']),
+      status: json['status'] as String? ?? '',
+      createdAt:
+          DateTime.tryParse(json['created_at']?.toString() ?? '') ??
+          DateTime.fromMillisecondsSinceEpoch(0),
     );
   }
 

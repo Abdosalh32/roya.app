@@ -7,10 +7,19 @@
 class LoginRequestModel {
   final String phone;
   final String password;
+  final String? fcmToken;
 
-  const LoginRequestModel({required this.phone, required this.password});
+  const LoginRequestModel({
+    required this.phone,
+    required this.password,
+    this.fcmToken,
+  });
 
-  Map<String, dynamic> toJson() => {'phone': phone, 'password': password};
+  Map<String, dynamic> toJson() => {
+    'phone': phone,
+    'password': password,
+    if (fcmToken != null && fcmToken!.isNotEmpty) 'fcm_token': fcmToken,
+  };
 }
 
 // ─── نموذج بيانات المتجر ──────────────────────────
@@ -99,14 +108,19 @@ class LoginResponseModel {
   factory LoginResponseModel.fromJson(Map<String, dynamic> json) {
     // استخراج البيانات من الكائن الداخلي "data" إن وُجد
     final data = json['data'] as Map<String, dynamic>?;
+    final tokenFromData =
+        data?['token'] as String? ?? data?['access_token'] as String?;
+    final tokenFromRoot =
+        json['token'] as String? ?? json['access_token'] as String?;
+    final userMap =
+        (data?['user'] as Map<String, dynamic>?) ??
+        (json['user'] as Map<String, dynamic>?);
 
     return LoginResponseModel(
       status: json['status'] as bool? ?? false,
       message: json['message'] as String? ?? '',
-      token: data?['token'] as String?,
-      user: data?['user'] != null
-          ? LoginUserModel.fromJson(data!['user'] as Map<String, dynamic>)
-          : null,
+      token: tokenFromData ?? tokenFromRoot,
+      user: userMap != null ? LoginUserModel.fromJson(userMap) : null,
     );
   }
 
