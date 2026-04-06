@@ -60,6 +60,9 @@ class AppRouter {
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>? ?? {};
           return OrderDetailScreen(
+            backendId: extra['backendId'] is int
+                ? extra['backendId'] as int
+                : int.tryParse(extra['backendId']?.toString() ?? ''),
             orderId: extra['orderId']?.toString() ?? '',
             customerName: extra['customerName']?.toString() ?? '',
             initialStatus: extra['status']?.toString(),

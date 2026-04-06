@@ -97,7 +97,11 @@ class OrderDarkHeader extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      Icon(Icons.credit_card_rounded, color: Colors.white54, size: 13.sp),
+                      Icon(
+                        Icons.credit_card_rounded,
+                        color: Colors.white54,
+                        size: 13.sp,
+                      ),
                       SizedBox(width: 4.w),
                       Text(
                         paymentMethod,
@@ -147,19 +151,31 @@ class OrderDarkHeader extends StatelessWidget {
 class OrderStatusTimeline extends StatelessWidget {
   final int currentIndex; // -1 if "New", 0 for first step, etc.
 
-  const OrderStatusTimeline({
-    super.key,
-    required this.currentIndex,
-  });
+  const OrderStatusTimeline({super.key, required this.currentIndex});
 
   @override
   Widget build(BuildContext context) {
     final steps = [
-      _TimelineStepData(icon: Icons.check_circle_rounded, label: 'status_accepted_timeline'.tr),
-      _TimelineStepData(icon: Icons.store_rounded, label: 'status_driver_store'.tr),
-      _TimelineStepData(icon: Icons.inventory_2_rounded, label: 'status_received'.tr),
-      _TimelineStepData(icon: Icons.local_shipping_rounded, label: 'status_delivering'.tr),
-      _TimelineStepData(icon: Icons.home_rounded, label: 'status_delivered_timeline'.tr),
+      _TimelineStepData(
+        icon: Icons.verified_user_rounded,
+        label: 'ongoing_status_waiting_confirm'.tr,
+      ),
+      _TimelineStepData(
+        icon: Icons.inventory_2_rounded,
+        label: 'ongoing_status_preparing'.tr,
+      ),
+      _TimelineStepData(
+        icon: Icons.store_rounded,
+        label: 'ongoing_status_waiting_pickup'.tr,
+      ),
+      _TimelineStepData(
+        icon: Icons.local_shipping_rounded,
+        label: 'status_delivering'.tr,
+      ),
+      _TimelineStepData(
+        icon: Icons.home_rounded,
+        label: 'status_delivered_timeline'.tr,
+      ),
     ];
 
     return Container(
@@ -180,7 +196,7 @@ class OrderStatusTimeline extends StatelessWidget {
           final i = entry.key;
           final step = entry.value;
           final isLast = i == steps.length - 1;
-          
+
           final isDone = i < currentIndex;
           final isActive = i == currentIndex;
 
@@ -197,8 +213,8 @@ class OrderStatusTimeline extends StatelessWidget {
                           color: isActive
                               ? const Color(0xFF1A2340)
                               : isDone
-                                  ? const Color(0xFF1A2340).withValues(alpha: 0.1)
-                                  : const Color(0xFFF1F4F9),
+                              ? const Color(0xFF1A2340).withValues(alpha: 0.1)
+                              : const Color(0xFFF1F4F9),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -206,8 +222,8 @@ class OrderStatusTimeline extends StatelessWidget {
                           color: isActive
                               ? Colors.white
                               : isDone
-                                  ? const Color(0xFF1A2340)
-                                  : const Color(0xFF94A3B8),
+                              ? const Color(0xFF1A2340)
+                              : const Color(0xFF94A3B8),
                           size: 20.sp,
                         ),
                       ),
@@ -219,7 +235,9 @@ class OrderStatusTimeline extends StatelessWidget {
                           color: isActive
                               ? const Color(0xFF1A2340)
                               : const Color(0xFF94A3B8),
-                          fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                          fontWeight: isActive
+                              ? FontWeight.bold
+                              : FontWeight.normal,
                           fontFamily: 'Cairo',
                         ),
                         textAlign: TextAlign.center,
@@ -234,7 +252,7 @@ class OrderStatusTimeline extends StatelessWidget {
                     height: 2,
                     margin: EdgeInsets.symmetric(horizontal: 2.w),
                     decoration: BoxDecoration(
-                      color: isDone 
+                      color: isDone
                           ? const Color(0xFF1A2340).withValues(alpha: 0.2)
                           : const Color(0xFFE2E8F0),
                       borderRadius: BorderRadius.circular(2),
@@ -259,15 +277,17 @@ class _TimelineStepData {
 class CustomerInfoCard extends StatelessWidget {
   final String name;
   final String address;
-  final String? avatarUrl;
+  final String phone;
   final VoidCallback onCall;
+  final VoidCallback onCopyPhone;
 
   const CustomerInfoCard({
     super.key,
     required this.name,
     required this.address,
-    this.avatarUrl,
+    required this.phone,
     required this.onCall,
+    required this.onCopyPhone,
   });
 
   @override
@@ -279,31 +299,6 @@ class CustomerInfoCard extends StatelessWidget {
         padding: EdgeInsets.all(20.w),
         child: Row(
           children: [
-            // Avatar (Right in Arabic/RTL)
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12.r),
-                child: avatarUrl != null 
-                    ? Image.network(avatarUrl!, width: 48.w, height: 48.w, fit: BoxFit.cover)
-                    : Container(
-                        width: 48.w,
-                        height: 48.w,
-                        color: const Color(0xFF1E293B),
-                        child: Icon(Icons.person_rounded, color: Colors.white, size: 24.sp),
-                      ),
-              ),
-            ),
-            SizedBox(width: 16.w),
             // Details (Center)
             Expanded(
               child: Column(
@@ -322,7 +317,11 @@ class CustomerInfoCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      Icon(Icons.location_on_rounded, size: 14.sp, color: const Color(0xFF94A3B8)),
+                      Icon(
+                        Icons.location_on_rounded,
+                        size: 14.sp,
+                        color: const Color(0xFF94A3B8),
+                      ),
                       SizedBox(width: 4.w),
                       Text(
                         address,
@@ -330,6 +329,47 @@ class CustomerInfoCard extends StatelessWidget {
                           color: const Color(0xFF64748B),
                           fontSize: 12.sp,
                           fontFamily: 'Cairo',
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 6.h),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.phone_outlined,
+                        size: 14.sp,
+                        color: const Color(0xFF94A3B8),
+                      ),
+                      SizedBox(width: 4.w),
+                      Expanded(
+                        child: Text(
+                          phone,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: const Color(0xFF64748B),
+                            fontSize: 12.sp,
+                            fontFamily: 'Cairo',
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 6.w),
+                      GestureDetector(
+                        onTap: onCopyPhone,
+                        child: Container(
+                          width: 28.w,
+                          height: 28.w,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          child: Icon(
+                            Icons.copy_rounded,
+                            size: 14.sp,
+                            color: const Color(0xFF475569),
+                          ),
                         ),
                       ),
                     ],
@@ -361,7 +401,6 @@ class CustomerInfoCard extends StatelessWidget {
     );
   }
 }
-
 
 /// ─── Products Card (Redesigned) ───
 class ProductsListCard extends StatelessWidget {
@@ -404,7 +443,8 @@ class ProductsListCard extends StatelessWidget {
                             width: 52.w,
                             height: 52.w,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => _productImagePlaceholder(),
+                            errorBuilder: (_, __, ___) =>
+                                _productImagePlaceholder(),
                           )
                         : _productImagePlaceholder(),
                   ),
@@ -462,7 +502,11 @@ class ProductsListCard extends StatelessWidget {
         color: AppColors.border,
         borderRadius: BorderRadius.circular(10.r),
       ),
-      child: Icon(Icons.image_rounded, color: AppColors.textSecondary, size: 22.sp),
+      child: Icon(
+        Icons.image_rounded,
+        color: AppColors.textSecondary,
+        size: 22.sp,
+      ),
     );
   }
 }
@@ -565,7 +609,11 @@ class DeliveryDetailsCard extends StatelessWidget {
                         color: Colors.white,
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(Icons.directions_car_rounded, color: const Color(0xFF1E293B), size: 20.sp),
+                      child: Icon(
+                        Icons.directions_car_rounded,
+                        color: const Color(0xFF1E293B),
+                        size: 20.sp,
+                      ),
                     ),
                   ],
                 ),
@@ -577,7 +625,6 @@ class DeliveryDetailsCard extends StatelessWidget {
     );
   }
 }
-
 
 /// ─── Base Card Wrapper ───
 class _BaseSectionCard extends StatelessWidget {

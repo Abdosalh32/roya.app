@@ -21,7 +21,9 @@ class CompletedOrderCard extends StatelessWidget {
     // تحديد لون الشارة بناءً على الحالة
     final isArchived = order.status == 'status_archived'.tr;
     final badgeColor = isArchived ? AppColors.border : const Color(0xFFC8E6C9);
-    final badgeTextColor = isArchived ? AppColors.textSecondary : const Color(0xFF2E7D32);
+    final badgeTextColor = isArchived
+        ? AppColors.textSecondary
+        : const Color(0xFF2E7D32);
 
     return InkWell(
       onTap: onTap,
@@ -63,7 +65,10 @@ class CompletedOrderCard extends StatelessWidget {
                         ),
                         SizedBox(height: 6.h),
                         Container(
-                          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 10.w,
+                            vertical: 4.h,
+                          ),
                           decoration: BoxDecoration(
                             color: badgeColor,
                             borderRadius: BorderRadius.circular(20.r),
@@ -91,26 +96,38 @@ class CompletedOrderCard extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            Text(
-                              order.date ?? '',
-                              style: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.textSecondary,
-                                fontSize: 10.sp,
+                            Flexible(
+                              child: Text(
+                                order.date ?? '',
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 10.sp,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             Padding(
                               padding: EdgeInsets.symmetric(horizontal: 4.w),
                               child: Text(
                                 '•',
-                                style: TextStyle(color: AppColors.border, fontSize: 10.sp),
+                                style: TextStyle(
+                                  color: AppColors.border,
+                                  fontSize: 10.sp,
+                                ),
                               ),
                             ),
-                            Text(
-                              order.id,
-                              style: AppTextStyles.headingSmall.copyWith(
-                                color: AppColors.primary,
-                                fontSize: 11.sp,
-                                fontWeight: FontWeight.bold,
+                            Flexible(
+                              child: Text(
+                                order.id,
+                                style: AppTextStyles.headingSmall.copyWith(
+                                  color: AppColors.primary,
+                                  fontSize: 11.sp,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.end,
                               ),
                             ),
                           ],
@@ -123,6 +140,9 @@ class CompletedOrderCard extends StatelessWidget {
                             fontSize: 15.sp,
                             fontWeight: FontWeight.bold,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.end,
                         ),
                         SizedBox(height: 4.h),
                         // عنوان العميل
@@ -140,7 +160,11 @@ class CompletedOrderCard extends StatelessWidget {
                               ),
                             ),
                             SizedBox(width: 4.w),
-                            Icon(Icons.location_on_rounded, color: AppColors.textSecondary, size: 14.sp),
+                            Icon(
+                              Icons.location_on_rounded,
+                              color: AppColors.textSecondary,
+                              size: 14.sp,
+                            ),
                           ],
                         ),
                       ],
@@ -149,7 +173,7 @@ class CompletedOrderCard extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             // خط الفاصل
             Divider(color: AppColors.border, height: 1),
 
@@ -168,9 +192,13 @@ class CompletedOrderCard extends StatelessWidget {
                       color: AppColors.background,
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.more_vert_rounded, color: AppColors.textSecondary, size: 18.sp),
+                    child: Icon(
+                      Icons.more_vert_rounded,
+                      color: AppColors.textSecondary,
+                      size: 18.sp,
+                    ),
                   ),
-                  
+
                   // معلومات السائق
                   if (order.driverName != null)
                     Row(
@@ -198,9 +226,11 @@ class CompletedOrderCard extends StatelessWidget {
                         CircleAvatar(
                           radius: 16.r,
                           backgroundColor: AppColors.border,
-                          backgroundImage: order.driverAvatar != null 
-                              ? NetworkImage(order.driverAvatar!) 
-                              : const NetworkImage('https://i.pravatar.cc/150?img=11'),
+                          backgroundImage: order.driverAvatar != null
+                              ? NetworkImage(order.driverAvatar!)
+                              : const NetworkImage(
+                                  'https://i.pravatar.cc/150?img=11',
+                                ),
                         ),
                       ],
                     ),

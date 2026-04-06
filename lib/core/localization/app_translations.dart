@@ -90,14 +90,14 @@ class AppTranslations extends Translations {
       'price_delivery': 'التوصيل',
       'price_free': 'مجاني',
       'price_total': 'الإجمالي',
-      
+
       // Flow & Actions
       'status_accepted_timeline': 'تم القبول',
       'status_driver_store': 'السائق للمتجر',
       'status_received': 'تم الاستلام',
       'status_delivering': 'جاري التوصيل',
       'status_delivered_timeline': 'تم التسليم',
-      
+
       // Completed Tab
       'search_completed': 'بحث برقم الطلب أو العميل',
       'total_sales': 'إجمالي المبيعات',
@@ -108,26 +108,32 @@ class AppTranslations extends Translations {
       'status_archived': 'أرشيف',
       'today_timeline': 'اليوم',
       'last_week': 'الأسبوع الماضي',
-      
+
       'btn_reject': 'رفض',
       'btn_accept_order': 'قبول الطلب',
       'btn_print': 'طباعة',
       'btn_reprint': 'إعادة الطباعة',
       'btn_assign_driver': 'تعيين السائق',
+      'btn_ready_for_pickup': 'جاهز لاستلام السائق',
       'btn_cancel': 'إلغاء',
       'btn_accept': 'قبول',
-      
+
       'driver_choose': 'اختر السائق',
       'driver_assign_title': 'قم بتعيين سائق لتوصيل الطلب',
       'driver_assigned_prefix': 'تم تعيين:',
-      
+
       // Dialogs
       'dialog_accept_title': 'تأكيد قبول الطلب',
       'dialog_accept_body': 'هل أنت متأكد من قبول هذا الطلب؟',
       'dialog_reject_title': 'تأكيد رفض الطلب',
       'dialog_reject_body': 'هل أنت متأكد من رفض هذا الطلب؟',
       'printing_snackbar': 'جاري تجهيز الطلب للطباعة...',
-      
+      'status_confirmation_waiting_info':
+          'بانتظار تأكيد خدمة العملاء قبل بدء التجهيز',
+      'status_preparing_info': 'ابدأ تجهيز الطلب ثم اضغط جاهز لاستلام السائق',
+      'status_waiting_pickup_info': 'الطلب جاهز وبانتظار استلام السائق',
+      'ready_pickup_success': 'تم تحديث الحالة إلى جاهز للاستلام',
+
       'delivery_info_title': 'معلومات التوصيل',
       'delivery_date': 'تاريخ التوصيل',
       'driver_label': 'السائق',
@@ -173,7 +179,8 @@ class AppTranslations extends Translations {
       'view_all': 'View All',
       'order_number': 'Order #@number',
       'add_manual_order': 'Add Manual Order',
-      'add_manual_order_subtitle': 'Quickly create a new order for your customers',
+      'add_manual_order_subtitle':
+          'Quickly create a new order for your customers',
 
       // --- Order Statuses ---
       'status_new': 'New',
@@ -220,14 +227,14 @@ class AppTranslations extends Translations {
       'price_delivery': 'Delivery',
       'price_free': 'Free',
       'price_total': 'Total',
-      
+
       // Flow & Actions
       'status_accepted_timeline': 'Accepted',
       'status_driver_store': 'Driver at Store',
       'status_received': 'Received',
       'status_delivering': 'Delivering',
       'status_delivered_timeline': 'Delivered',
-      
+
       // Completed Tab
       'search_completed': 'Search by order no. or customer',
       'total_sales': 'Total Sales',
@@ -238,26 +245,34 @@ class AppTranslations extends Translations {
       'status_archived': 'Archived',
       'today_timeline': 'Today',
       'last_week': 'Last Week',
-      
+
       'btn_reject': 'Reject',
       'btn_accept_order': 'Accept Order',
       'btn_print': 'Print',
       'btn_reprint': 'Reprint',
       'btn_assign_driver': 'Assign Driver',
+      'btn_ready_for_pickup': 'Ready for Pickup',
       'btn_cancel': 'Cancel',
       'btn_accept': 'Accept',
-      
+
       'driver_choose': 'Choose Driver',
       'driver_assign_title': 'Assign a driver for the order',
       'driver_assigned_prefix': 'Assigned:',
-      
+
       // Dialogs
       'dialog_accept_title': 'Confirm Order Acceptance',
       'dialog_accept_body': 'Are you sure you want to accept this order?',
       'dialog_reject_title': 'Confirm Order Rejection',
       'dialog_reject_body': 'Are you sure you want to reject this order?',
       'printing_snackbar': 'Preparing order for printing...',
-      
+      'status_confirmation_waiting_info':
+          'Waiting for customer-service confirmation before preparing',
+      'status_preparing_info':
+          'Prepare the order, then mark it ready for driver pickup',
+      'status_waiting_pickup_info':
+          'Order is ready and waiting for driver pickup',
+      'ready_pickup_success': 'Status updated to ready for pickup',
+
       'delivery_info_title': 'Delivery Information',
       'delivery_date': 'Delivery Date',
       'driver_label': 'Driver',

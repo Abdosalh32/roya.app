@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:roya/core/theme/app_colors.dart';
 import 'package:roya/core/theme/app_text_styles.dart';
+
 import '../../controllers/orders_controller.dart';
 
 class OrderItemCard extends StatelessWidget {
@@ -63,6 +64,8 @@ class OrderItemCard extends StatelessWidget {
                             fontSize: 12.sp,
                             color: AppColors.textPrimary,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         SizedBox(height: 4.h),
                         Text(
@@ -70,28 +73,34 @@ class OrderItemCard extends StatelessWidget {
                           style: AppTextStyles.bodyMedium.copyWith(
                             color: AppColors.textSecondary,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         SizedBox(height: 4.h),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              order.currency,
-                              style: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.textSecondary,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 10.sp,
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: AlignmentDirectional.centerStart,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                order.currency,
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10.sp,
+                                ),
                               ),
-                            ),
-                            SizedBox(width: 4.w),
-                            Text(
-                              order.price.toStringAsFixed(2),
-                              style: AppTextStyles.headingSmall.copyWith(
-                                color: const Color(0xFF1976D2),
-                                fontSize: 16.sp,
+                              SizedBox(width: 4.w),
+                              Text(
+                                order.price.toStringAsFixed(2),
+                                style: AppTextStyles.headingSmall.copyWith(
+                                  color: const Color(0xFF1976D2),
+                                  fontSize: 16.sp,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -117,6 +126,8 @@ class OrderItemCard extends StatelessWidget {
                             color: const Color(0xFFFF6B2C),
                             fontWeight: FontWeight.bold,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       SizedBox(height: 8.h),

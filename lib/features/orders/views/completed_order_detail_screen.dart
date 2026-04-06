@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../data/models/order_detail_model.dart';
@@ -9,10 +11,74 @@ import 'widgets/order_details_components.dart';
 class CompletedOrderDetailScreen extends StatelessWidget {
   final OrderDetailModel order;
 
-  const CompletedOrderDetailScreen({
-    super.key,
-    required this.order,
-  });
+  const CompletedOrderDetailScreen({super.key, required this.order});
+
+  Future<void> _callCustomer(BuildContext context) async {
+    final phone = order.customerPhone.replaceAll(RegExp(r'[^0-9+]'), '');
+    if (phone.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('رقم الهاتف غير متوفر')));
+      return;
+    }
+
+    final uri = Uri(scheme: 'tel', path: phone);
+    try {
+      final canLaunch = await canLaunchUrl(uri);
+      if (!canLaunch) {
+        await Clipboard.setData(ClipboardData(text: phone));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('هذا الجهاز لا يدعم الاتصال. تم نسخ الرقم للحافظة'),
+          ),
+        );
+        return;
+      }
+
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+
+      if (!launched && context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('تعذر فتح تطبيق الهاتف')));
+      }
+    } on PlatformException catch (_) {
+      await Clipboard.setData(ClipboardData(text: phone));
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تعذر فتح الاتصال الآن. تم نسخ الرقم للحافظة'),
+          ),
+        );
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('حدث خطأ أثناء محاولة الاتصال')),
+        );
+      }
+    }
+  }
+
+  Future<void> _copyCustomerPhone(BuildContext context) async {
+    final phone = order.customerPhone.trim();
+    if (phone.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('رقم الهاتف غير متوفر')));
+      return;
+    }
+
+    await Clipboard.setData(ClipboardData(text: phone));
+    if (context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('تم نسخ رقم الهاتف')));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,19 +109,24 @@ class CompletedOrderDetailScreen extends StatelessWidget {
                   CustomerInfoCard(
                     name: order.customerName,
                     address: order.customerCity,
-                    avatarUrl: 'https://i.pravatar.cc/150?img=5',
-                    onCall: () {},
+                    phone: order.customerPhone,
+                    onCall: () => _callCustomer(context),
+                    onCopyPhone: () => _copyCustomerPhone(context),
                   ),
                   SizedBox(height: 16.h),
 
                   // Products Card
                   ProductsListCard(
-                    products: order.products.map((p) => ProductItemData(
-                      name: p.name,
-                      quantity: p.quantity,
-                      price: p.price,
-                      imageUrl: p.imageUrl,
-                    )).toList(),
+                    products: order.products
+                        .map(
+                          (p) => ProductItemData(
+                            name: p.name,
+                            quantity: p.quantity,
+                            price: p.price,
+                            imageUrl: p.imageUrl,
+                          ),
+                        )
+                        .toList(),
                     currency: 'د.ل',
                   ),
                   SizedBox(height: 16.h),
@@ -79,7 +150,11 @@ class CompletedOrderDetailScreen extends StatelessWidget {
   Widget _buildBottomActions(BuildContext context) {
     return Container(
       padding: EdgeInsets.fromLTRB(
-          16.w, 12.h, 16.w, MediaQuery.of(context).padding.bottom + 12.h),
+        16.w,
+        12.h,
+        16.w,
+        MediaQuery.of(context).padding.bottom + 12.h,
+      ),
       decoration: BoxDecoration(
         color: AppColors.card,
         boxShadow: [
@@ -99,9 +174,14 @@ class CompletedOrderDetailScreen extends StatelessWidget {
                 side: BorderSide(color: AppColors.primary, width: 1.5),
                 padding: EdgeInsets.symmetric(vertical: 14.h),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.r)),
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
               ),
-              icon: Icon(Icons.print_rounded, color: AppColors.primary, size: 18.sp),
+              icon: Icon(
+                Icons.print_rounded,
+                color: AppColors.primary,
+                size: 18.sp,
+              ),
               label: Text(
                 'print'.tr,
                 style: const TextStyle(fontWeight: FontWeight.bold),
@@ -121,12 +201,18 @@ class CompletedOrderDetailScreen extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.check_circle_rounded,
-                      color: const Color(0xFF2E7D32), size: 18.sp),
+                  Icon(
+                    Icons.check_circle_rounded,
+                    color: const Color(0xFF2E7D32),
+                    size: 18.sp,
+                  ),
                   SizedBox(width: 8.w),
                   Text(
                     'status_delivered_timeline'.tr,
-                    style: const TextStyle(color: Color(0xFF2E7D32), fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      color: Color(0xFF2E7D32),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
