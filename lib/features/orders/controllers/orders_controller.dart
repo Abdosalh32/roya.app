@@ -64,9 +64,28 @@ class OrdersController extends GetxController
   final errorMessage = ''.obs;
   final Dio _dio = Get.find<DioClient>().dio;
 
-  final RxList<OrderModel> newOrders = <OrderModel>[].obs;
-  final RxList<OrderModel> ongoingOrders = <OrderModel>[].obs;
-  final RxList<OrderModel> completedOrders = <OrderModel>[].obs;
+  final RxList<OrderModel> allOrders = <OrderModel>[].obs;
+  final RxString selectedOrderCategory =
+      'standard'.obs; // 'standard' or 'manual'
+
+  List<OrderModel> get newOrders => allOrders
+      .where((o) => _isNewStatus(o.statusRaw) && _isCorrectCategory(o))
+      .toList();
+
+  List<OrderModel> get ongoingOrders => allOrders
+      .where((o) => _isOngoingStatus(o.statusRaw) && _isCorrectCategory(o))
+      .toList();
+
+  List<OrderModel> get completedOrders => allOrders
+      .where((o) => _isCompletedStatus(o.statusRaw) && _isCorrectCategory(o))
+      .toList();
+
+  bool _isCorrectCategory(OrderModel o) {
+    if (selectedOrderCategory.value == 'manual') {
+      return o.orderType == 'manual' || o.orderType == 'manual_order';
+    }
+    return o.orderType != 'manual' && o.orderType != 'manual_order';
+  }
 
   // Search query for completed orders
   final searchQuery = ''.obs;
@@ -107,15 +126,7 @@ class OrdersController extends GetxController
       final items = _extractOrders(response.data);
       final parsed = items.map(_toOrderModel).toList();
 
-      newOrders.assignAll(
-        parsed.where((o) => _isNewStatus(o.statusRaw)).toList(),
-      );
-      ongoingOrders.assignAll(
-        parsed.where((o) => _isOngoingStatus(o.statusRaw)).toList(),
-      );
-      completedOrders.assignAll(
-        parsed.where((o) => _isCompletedStatus(o.statusRaw)).toList(),
-      );
+      allOrders.assignAll(parsed);
     } on DioException catch (e) {
       final msg = (e.response?.data is Map<String, dynamic>)
           ? (e.response?.data['message']?.toString() ?? 'فشل تحميل الطلبات')
@@ -228,6 +239,21 @@ class OrdersController extends GetxController
         ? json['items_count'] as int
         : ((json['items'] is List) ? (json['items'] as List).length : 1);
 
+    bool isManual = false;
+    final orderTypeRaw = json['order_type']?.toString().toLowerCase();
+    if (orderTypeRaw == 'manual' || orderTypeRaw == 'manual_order') {
+      isManual = true;
+    } else if (json['items'] is List) {
+      for (var item in json['items']) {
+        if (item['product_name_en'] == 'Manual Order' ||
+            item['product_name_ar'] == 'طلب يدوي') {
+          isManual = true;
+          break;
+        }
+      }
+    }
+    final deducedOrderType = isManual ? 'manual' : (orderTypeRaw ?? 'delivery');
+
     return OrderModel(
       backendId: subOrderId is int
           ? subOrderId
@@ -240,7 +266,7 @@ class OrdersController extends GetxController
       timeElapsed: elapsed,
       itemCount: itemsCount,
       driverName: driverName,
-      orderType: 'delivery',
+      orderType: deducedOrderType,
       customerAddress: regionName,
       driverAvatar: driverAvatar,
       date: date,
@@ -330,12 +356,12 @@ class OrdersController extends GetxController
   }
 
   void assignDriver(String orderId, String driver) {
-    final index = ongoingOrders.indexWhere((o) => o.id == orderId);
+    final index = allOrders.indexWhere((o) => o.id == orderId);
     if (index != -1) {
-      final updated = ongoingOrders[index].copyWith(
+      final updated = allOrders[index].copyWith(
         driverName: driver.split(' - ').first,
       );
-      ongoingOrders[index] = updated;
+      allOrders[index] = updated;
     }
   }
 

@@ -1,9 +1,11 @@
 import 'dart:io';
+
+import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:dotted_border/dotted_border.dart';
+
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/validators.dart';
@@ -46,6 +48,68 @@ class ProductDetailsSection extends GetView<ManualOrderController> {
             fillColor: AppColors.card,
           ),
           validator: AppValidators.positiveNumber,
+        ),
+        SizedBox(height: 12.h),
+        TextFormField(
+          controller: controller.deliveryFeeCtrl,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: InputDecoration(
+            labelText: 'سعر التوصيل',
+            labelStyle: AppTextStyles.bodyMedium,
+            suffixText: 'د.ل',
+            prefixIcon: const Icon(
+              Icons.local_shipping_outlined,
+              color: AppColors.textSecondary,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: const BorderSide(color: AppColors.primary),
+            ),
+            filled: true,
+            fillColor: AppColors.card,
+          ),
+          validator: AppValidators.positiveNumber,
+        ),
+        SizedBox(height: 12.h),
+        TextFormField(
+          controller: controller.quantityCtrl,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            labelText: 'الكمية',
+            labelStyle: AppTextStyles.bodyMedium,
+            prefixIcon: const Icon(
+              Icons.format_list_numbered,
+              color: AppColors.textSecondary,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: const BorderSide(color: AppColors.primary),
+            ),
+            filled: true,
+            fillColor: AppColors.card,
+          ),
+          validator: (val) {
+            if (val == null || val.isEmpty) return 'مطلوب';
+            if (int.tryParse(val) == null || int.parse(val) < 1)
+              return 'يجب أن تكون الكمية 1 على الأقل';
+            return null;
+          },
         ),
         SizedBox(height: 12.h),
         Obx(

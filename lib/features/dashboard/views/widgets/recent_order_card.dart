@@ -2,12 +2,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
-import 'package:timeago/timeago.dart' as timeago;
 import 'package:get/get.dart';
-import '../../data/models/dashboard_model.dart';
+import 'package:intl/intl.dart';
 import 'package:roya/core/theme/app_colors.dart';
 import 'package:roya/core/theme/app_text_styles.dart';
+import 'package:timeago/timeago.dart' as timeago;
+
+import '../../data/models/dashboard_model.dart';
 
 class RecentOrderCard extends StatelessWidget {
   final RecentOrderModel order;
@@ -58,12 +59,16 @@ class RecentOrderCard extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          Text(
-                            'order_number'.trParams({
-                              'number': order.orderNumber.toString(),
-                            }),
-                            style: AppTextStyles.headingSmall.copyWith(
-                              fontSize: 14.sp,
+                          Expanded(
+                            child: Text(
+                              'order_number'.trParams({
+                                'number': order.orderNumber.toString(),
+                              }),
+                              style: AppTextStyles.headingSmall.copyWith(
+                                fontSize: 14.sp,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           SizedBox(width: 8.w),

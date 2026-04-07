@@ -25,6 +25,8 @@ class OrdersScreen extends StatelessWidget {
         child: Column(
           children: [
             _buildCustomAppBar(),
+            SizedBox(height: 8.h),
+            _buildOrderCategoryToggle(controller),
             SizedBox(height: 16.h),
             _buildCustomTabBar(controller),
             SizedBox(height: 16.h),
@@ -68,6 +70,83 @@ class OrdersScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildOrderCategoryToggle(OrdersController controller) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20.w),
+      child: Obx(
+        () => Row(
+          children: [
+            Expanded(
+              child: GestureDetector(
+                onTap: () =>
+                    controller.selectedOrderCategory.value = 'standard',
+                child: Container(
+                  padding: EdgeInsets.symmetric(vertical: 12.h),
+                  decoration: BoxDecoration(
+                    color: controller.selectedOrderCategory.value == 'standard'
+                        ? AppColors.primary
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.horizontal(
+                      right: Radius.circular(12.r),
+                    ),
+                    border: Border.all(
+                      color:
+                          controller.selectedOrderCategory.value == 'standard'
+                          ? AppColors.primary
+                          : AppColors.border,
+                    ),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    'الطلبات العادية',
+                    style: AppTextStyles.headingSmall.copyWith(
+                      color:
+                          controller.selectedOrderCategory.value == 'standard'
+                          ? Colors.white
+                          : AppColors.textSecondary,
+                      fontSize: 14.sp,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: GestureDetector(
+                onTap: () => controller.selectedOrderCategory.value = 'manual',
+                child: Container(
+                  padding: EdgeInsets.symmetric(vertical: 12.h),
+                  decoration: BoxDecoration(
+                    color: controller.selectedOrderCategory.value == 'manual'
+                        ? AppColors.primary
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.horizontal(
+                      left: Radius.circular(12.r),
+                    ),
+                    border: Border.all(
+                      color: controller.selectedOrderCategory.value == 'manual'
+                          ? AppColors.primary
+                          : AppColors.border,
+                    ),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    'الطلبات اليدوية',
+                    style: AppTextStyles.headingSmall.copyWith(
+                      color: controller.selectedOrderCategory.value == 'manual'
+                          ? Colors.white
+                          : AppColors.textSecondary,
+                      fontSize: 14.sp,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -224,186 +303,12 @@ class OrdersScreen extends StatelessWidget {
                       'driverName': order.driverName,
                     },
                   ),
-                  onAssignDriver: () =>
-                      _showDriverBottomSheet(context, controller, order),
                 );
               },
             ),
           ),
         );
       }),
-    );
-  }
-
-  void _showDriverBottomSheet(
-    BuildContext context,
-    OrdersController controller,
-    OrderModel order,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (ctx) {
-        return Container(
-          decoration: BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-          ),
-          padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 32.h),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Handle bar
-              Container(
-                width: 40.w,
-                height: 4.h,
-                decoration: BoxDecoration(
-                  color: AppColors.border,
-                  borderRadius: BorderRadius.circular(2.r),
-                ),
-              ),
-              SizedBox(height: 16.h),
-
-              // Title
-              Row(
-                children: [
-                  const Spacer(),
-                  Text(
-                    'select_driver_title'.tr,
-                    style: AppTextStyles.headingSmall.copyWith(fontSize: 16.sp),
-                  ),
-                  SizedBox(width: 8.w),
-                  Icon(
-                    Icons.local_shipping_rounded,
-                    color: AppColors.primary,
-                    size: 22.sp,
-                  ),
-                ],
-              ),
-              SizedBox(height: 8.h),
-
-              // Order info
-              Container(
-                padding: EdgeInsets.all(12.w),
-                decoration: BoxDecoration(
-                  color: AppColors.background,
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${order.currency} ${order.price.toStringAsFixed(2)}',
-                      style: AppTextStyles.headingSmall.copyWith(
-                        color: const Color(0xFF1976D2),
-                        fontSize: 14.sp,
-                      ),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          order.id,
-                          style: AppTextStyles.headingSmall.copyWith(
-                            fontSize: 13.sp,
-                          ),
-                        ),
-                        Text(
-                          order.customerName,
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 16.h),
-
-              // Driver list
-              ...controller.availableDrivers.map((driver) {
-                final driverName = driver.split(' - ').first;
-                final driverVehicle = driver.split(' - ').last;
-                return InkWell(
-                  onTap: () {
-                    controller.assignDriver(order.id, driver);
-                    Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'assign_driver_success'.tr,
-                          style: const TextStyle(fontFamily: 'Cairo'),
-                        ),
-                        backgroundColor: AppColors.success,
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10.r),
-                        ),
-                      ),
-                    );
-                  },
-                  borderRadius: BorderRadius.circular(12.r),
-                  child: Container(
-                    margin: EdgeInsets.only(bottom: 8.h),
-                    padding: EdgeInsets.all(14.w),
-                    decoration: BoxDecoration(
-                      color: AppColors.background,
-                      borderRadius: BorderRadius.circular(12.r),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: Row(
-                      children: [
-                        // Select icon
-                        Container(
-                          width: 36.w,
-                          height: 36.w,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.08),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.person_rounded,
-                            color: AppColors.primary,
-                            size: 20.sp,
-                          ),
-                        ),
-                        SizedBox(width: 12.w),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                driverName,
-                                style: AppTextStyles.headingSmall.copyWith(
-                                  fontSize: 14.sp,
-                                ),
-                              ),
-                              Text(
-                                driverVehicle,
-                                style: AppTextStyles.bodySmall.copyWith(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 11.sp,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Icon(
-                          Icons.arrow_back_ios_rounded,
-                          color: AppColors.textSecondary,
-                          size: 16.sp,
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }),
-            ],
-          ),
-        );
-      },
     );
   }
 

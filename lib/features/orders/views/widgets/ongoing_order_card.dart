@@ -9,14 +9,8 @@ import '../../controllers/orders_controller.dart';
 class OngoingOrderCard extends StatelessWidget {
   final OrderModel order;
   final VoidCallback? onTap;
-  final VoidCallback? onAssignDriver;
 
-  const OngoingOrderCard({
-    super.key,
-    required this.order,
-    this.onTap,
-    this.onAssignDriver,
-  });
+  const OngoingOrderCard({super.key, required this.order, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -266,32 +260,6 @@ class OngoingOrderCard extends StatelessWidget {
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        SizedBox(width: 8.w),
-        // Assign driver button
-        GestureDetector(
-          onTap: onAssignDriver,
-          child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.circular(20.r),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.2),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Text(
-              'btn_assign_driver_short'.tr,
-              style: AppTextStyles.headingSmall.copyWith(
-                color: Colors.white,
-                fontSize: 12.sp,
-              ),
-            ),
           ),
         ),
       ],

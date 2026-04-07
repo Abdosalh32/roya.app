@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../controllers/manual_order_controller.dart';
@@ -38,15 +39,17 @@ class OrderSummaryCard extends GetView<ManualOrderController> {
             ),
           ),
           SizedBox(height: 8.h),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('رسوم التوصيل الثابتة', style: AppTextStyles.bodyMedium),
-              Text(
-                '${currencyFormatter.format(controller.deliveryFee)} د.ل',
-                style: AppTextStyles.bodyLarge,
-              ),
-            ],
+          Obx(
+            () => Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('رسوم التوصيل', style: AppTextStyles.bodyMedium),
+                Text(
+                  '${currencyFormatter.format(controller.deliveryFee.value)} د.ل',
+                  style: AppTextStyles.bodyLarge,
+                ),
+              ],
+            ),
           ),
           Divider(color: AppColors.border, height: 24.h),
           Obx(

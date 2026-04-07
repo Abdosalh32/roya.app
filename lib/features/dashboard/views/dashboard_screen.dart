@@ -256,10 +256,7 @@ class DashboardScreen extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                Icons.add_shopping_cart_rounded,
-                color: Colors.white,
-              ),
+              const Icon(Icons.add_shopping_cart_rounded, color: Colors.white),
               SizedBox(width: 12.w),
               Text(
                 'add_manual_order'.tr,

@@ -4,6 +4,9 @@ class ManualOrderRequest {
   final String clientName;
   final String clientPhone;
   final double totalPrice;
+  final double deliveryFee;
+  final int quantity;
+  final int addressRegionId;
   final String packageType;
   final String? description;
   final String? imagePath;
@@ -15,6 +18,9 @@ class ManualOrderRequest {
     required this.clientName,
     required this.clientPhone,
     required this.totalPrice,
+    required this.deliveryFee,
+    required this.quantity,
+    required this.addressRegionId,
     required this.packageType,
     this.description,
     this.imagePath,
@@ -27,16 +33,17 @@ class ManualOrderRequest {
   /// handling potential image uploads using MultipartFile.
   Future<FormData> toFormData() async {
     final formData = FormData.fromMap({
-      'client_name': clientName,
-      'client_phone': clientPhone,
-      'total_price': totalPrice,
-      'package_type': packageType,
-      'city': city,
-      'address': address,
+      'customer_name': clientName,
+      'customer_phone': clientPhone,
+      'unit_price': totalPrice,
+      'delivery_fee': deliveryFee,
+      'quantity': quantity,
+      'address_region_id': addressRegionId,
+      'address_details': '$address - $city',
       if (description != null && description!.isNotEmpty)
-        'description': description,
+        'product_description': description,
       if (deliveryNotes != null && deliveryNotes!.isNotEmpty)
-        'delivery_notes': deliveryNotes,
+        'notes': deliveryNotes,
     });
 
     if (imagePath != null && imagePath!.isNotEmpty) {
