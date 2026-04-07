@@ -51,7 +51,7 @@ class ProductsController extends GetxController {
       final list = await repository.fetchCategories();
       categories.assignAll(list);
     } catch (e) {
-      // ignore
+      debugPrint('Error fetching categories: $e');
     }
   }
 

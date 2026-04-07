@@ -1,6 +1,6 @@
 class ShopCategory {
   final int id;
-  final int shopId;
+  final int? shopId;
   final String nameAr;
   final String nameEn;
   final int sortOrder;
@@ -8,7 +8,7 @@ class ShopCategory {
 
   ShopCategory({
     required this.id,
-    required this.shopId,
+    this.shopId,
     required this.nameAr,
     required this.nameEn,
     this.sortOrder = 0,
@@ -17,7 +17,7 @@ class ShopCategory {
 
   factory ShopCategory.fromJson(Map<String, dynamic> json) => ShopCategory(
     id: json['id'] as int,
-    shopId: json['shop_id'] as int,
+    shopId: json['shop_id'] as int?,
     nameAr: json['name_ar'] as String? ?? '',
     nameEn: json['name_en'] as String? ?? '',
     sortOrder: json['sort_order'] as int? ?? 0,

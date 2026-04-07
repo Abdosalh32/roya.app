@@ -33,8 +33,8 @@ class ShopModel {
   factory ShopModel.fromJson(Map<String, dynamic> json) {
     return ShopModel(
       id: json['id'] as int?,
-      name: json['name'] as String?,
-      logo: json['logo'] as String?,
+      name: json['name_ar'] as String? ?? json['name'] as String?,
+      logo: json['logo_url'] as String? ?? json['logo'] as String?,
     );
   }
 

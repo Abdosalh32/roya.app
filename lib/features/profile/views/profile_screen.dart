@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +6,7 @@ import 'package:roya/core/router/route_names.dart';
 import 'package:roya/core/storage/secure_storage.dart';
 import 'package:roya/core/theme/app_colors.dart';
 import 'package:roya/features/auth/data/repositories/auth_repository.dart';
+import 'package:roya/features/profile/controllers/profile_controller.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -15,6 +17,8 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _isLoggingOut = false;
+
+  ProfileController get c => Get.find<ProfileController>();
 
   Future<void> _logout() async {
     if (_isLoggingOut) return;
@@ -72,42 +76,112 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+            Obx(() {
+              if (c.isLoading.value) {
+                return const Expanded(
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              if (c.errorMessage.isNotEmpty) {
+                return Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFDECEA),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                ],
-              ),
-              child: Row(
-                children: const [
-                  CircleAvatar(
-                    radius: 28,
-                    backgroundColor: AppColors.primary,
-                    child: Icon(Icons.person, color: Colors.white, size: 30),
-                  ),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Shop Owner',
-                      style: TextStyle(
-                        fontFamily: 'Cairo',
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
+                  child: Column(
+                    children: [
+                      Text(
+                        c.errorMessage.value,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: AppColors.danger,
+                          fontFamily: 'Cairo',
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: c.fetchProfile,
+                        child: const Text(
+                          'إعادة المحاولة',
+                          style: TextStyle(fontFamily: 'Cairo'),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
+                );
+              }
+
+              final user = c.user.value;
+              if (user == null) return const SizedBox.shrink();
+
+              return Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.06),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 28,
+                          backgroundColor: AppColors.primary,
+                          backgroundImage:
+                              (user.logo != null && user.logo!.isNotEmpty)
+                              ? CachedNetworkImageProvider(user.logo!)
+                              : null,
+                          child: (user.logo == null || user.logo!.isEmpty)
+                              ? const Icon(
+                                  Icons.store,
+                                  color: Colors.white,
+                                  size: 30,
+                                )
+                              : null,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                user.name ?? 'Shop Owner',
+                                style: const TextStyle(
+                                  fontFamily: 'Cairo',
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                              if (user.id != null)
+                                Text(
+                                  'المعرف: \${user.id}',
+                                  style: const TextStyle(
+                                    fontFamily: 'Cairo',
+                                    fontSize: 14,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            }),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
@@ -127,6 +201,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     : const Icon(Icons.logout_rounded),
                 label: Text(
                   _isLoggingOut ? 'جار تسجيل الخروج...' : 'تسجيل الخروج',
+                  style: const TextStyle(fontFamily: 'Cairo'),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.danger,

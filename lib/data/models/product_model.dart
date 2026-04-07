@@ -119,7 +119,7 @@ class ProductVariantType {
 
 class Product {
   final int id;
-  final int shopId;
+  final int? shopId;
   final int? categoryId;
   final String nameAr;
   final String nameEn;
@@ -131,10 +131,11 @@ class Product {
   final int sortOrder;
   final List<ProductImage> images;
   final List<ProductVariantType> variantTypes;
+  final String? primaryImage;
 
   Product({
     required this.id,
-    required this.shopId,
+    this.shopId,
     this.categoryId,
     required this.nameAr,
     required this.nameEn,
@@ -146,6 +147,7 @@ class Product {
     this.sortOrder = 0,
     this.images = const [],
     this.variantTypes = const [],
+    this.primaryImage,
   });
 
   Product copyWith({
@@ -162,6 +164,7 @@ class Product {
     int? sortOrder,
     List<ProductImage>? images,
     List<ProductVariantType>? variantTypes,
+    String? primaryImage,
   }) {
     return Product(
       id: id ?? this.id,
@@ -177,12 +180,13 @@ class Product {
       sortOrder: sortOrder ?? this.sortOrder,
       images: images ?? this.images,
       variantTypes: variantTypes ?? this.variantTypes,
+      primaryImage: primaryImage ?? this.primaryImage,
     );
   }
 
   factory Product.fromJson(Map<String, dynamic> json) => Product(
     id: json['id'] as int,
-    shopId: json['shop_id'] as int,
+    shopId: json['shop_id'] as int?,
     categoryId: json['category_id'] as int?,
     nameAr: json['name_ar'] as String? ?? '',
     nameEn: json['name_en'] as String? ?? '',
@@ -196,6 +200,7 @@ class Product {
         : null,
     isActive: (json['is_active'] as bool?) ?? true,
     sortOrder: json['sort_order'] as int? ?? 0,
+    primaryImage: json['primary_image'] as String?,
     images:
         (json['images'] as List<dynamic>?)
             ?.map((e) => ProductImage.fromJson(e as Map<String, dynamic>))

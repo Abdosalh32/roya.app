@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:roya/core/router/route_names.dart';
 import 'package:roya/core/theme/app_colors.dart';
+import 'package:roya/features/profile/bindings/profile_binding.dart';
 import 'package:roya/modules/products/binding.dart';
 import 'package:roya/modules/products/screen.dart';
 
@@ -167,7 +168,10 @@ class AppRouter {
               GoRoute(
                 path: RouteNames.profile,
                 name: 'profile',
-                builder: (context, state) => const ProfileScreen(),
+                builder: (context, state) {
+                  ProfileBinding().dependencies();
+                  return const ProfileScreen();
+                },
               ),
             ],
           ),

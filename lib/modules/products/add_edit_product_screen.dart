@@ -228,10 +228,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                 const SizedBox(height: 8),
                 DropdownButtonFormField<int?>(
                   value: categoryId,
+                  validator: (v) => v == null ? 'الرجاء اختيار تصنيف' : null,
                   items: [
                     const DropdownMenuItem<int?>(
                       value: null,
-                      child: Text('بدون تصنيف'),
+                      child: Text('اختر تصنيف'),
                     ),
                     ...c.categories
                         .map(
