@@ -26,7 +26,7 @@ class DashboardScreen extends StatelessWidget {
     final controller = Get.find<DashboardController>();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: RefreshIndicator(
           color: AppColors.primary,

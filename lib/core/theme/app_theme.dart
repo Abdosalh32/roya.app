@@ -13,7 +13,7 @@ class AppTheme {
   static final ThemeData light = ThemeData(
     useMaterial3: true,
     primaryColor: AppColors.primary,
-    scaffoldBackgroundColor: AppColors.background,
+    scaffoldBackgroundColor: Colors.transparent,
     fontFamily: 'Cairo',
     colorScheme: ColorScheme.fromSeed(
       seedColor: AppColors.primary,

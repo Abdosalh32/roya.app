@@ -130,7 +130,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         title: Text(widget.product == null ? 'إضافة منتج' : 'تعديل المنتج'),
         backgroundColor: AppColors.primary,
       ),
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(12),

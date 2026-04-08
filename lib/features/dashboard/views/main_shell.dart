@@ -29,7 +29,7 @@ class MainShell extends StatelessWidget {
         child: BottomNavigationBar(
           currentIndex: navigationShell.currentIndex,
           onTap: _onTap,
-          backgroundColor: Colors.white,
+          backgroundColor: Colors.transparent,
           type: BottomNavigationBarType.fixed,
           selectedItemColor: AppColors.primary,
           unselectedItemColor: AppColors.textSecondary,

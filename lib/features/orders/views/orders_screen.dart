@@ -20,7 +20,7 @@ class OrdersScreen extends StatelessWidget {
     final controller = Get.put(OrdersController());
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: Column(
           children: [
@@ -49,27 +49,16 @@ class OrdersScreen extends StatelessWidget {
 
   Widget _buildCustomAppBar() {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            'nav_orders'.tr,
-            style: AppTextStyles.headingSmall.copyWith(
-              color: const Color(0xFF1976D2),
-              fontSize: 20.sp,
-              fontWeight: FontWeight.bold,
-            ),
+      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+      child: Center(
+        child: Text(
+          'nav_orders'.tr,
+          style: AppTextStyles.headingMedium.copyWith(
+            color: const Color(0xFF1976D2),
+            fontSize: 20.sp,
+            fontWeight: FontWeight.bold,
           ),
-          Icon(Icons.menu_rounded, color: const Color(0xFF1976D2), size: 28.sp),
-          CircleAvatar(
-            radius: 20.r,
-            backgroundColor: AppColors.border,
-            backgroundImage: const NetworkImage(
-              'https://i.pravatar.cc/150?img=11',
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

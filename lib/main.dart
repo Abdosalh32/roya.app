@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'app/bindings/initial_binding.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/background_wrapper.dart';
 import 'core/services/app_lifecycle.dart';
 import 'core/localization/app_translations.dart';
 import 'core/localization/localization_service.dart';
@@ -58,11 +59,12 @@ class RoyaApp extends StatelessWidget {
           fallbackLocale: LocalizationService.fallbackLocale,
           builder: (context, widget) {
             // ضمان اتجاه الواجهة حسب اللغة (LTR أو RTL)
-            return Directionality(
+            return BackgroundWrapper(child: Directionality(
               textDirection: Get.locale?.languageCode == 'en'
                   ? TextDirection.ltr
                   : TextDirection.rtl,
               child: widget ?? const SizedBox.shrink(),
+            ),
             );
           },
         );

@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:roya/core/router/route_names.dart';
-import 'package:roya/core/theme/app_colors.dart';
 import 'package:roya/features/profile/bindings/profile_binding.dart';
 import 'package:roya/modules/products/binding.dart';
 import 'package:roya/modules/products/screen.dart';
@@ -19,6 +18,10 @@ import '../../features/orders/data/models/order_detail_model.dart';
 import '../../features/orders/views/completed_order_detail_screen.dart';
 import '../../features/orders/views/order_detail_screen.dart';
 import '../../features/orders/views/orders_screen.dart';
+import '../../features/payouts/bindings/payouts_binding.dart';
+import '../../features/payouts/data/models/payout_model.dart';
+import '../../features/payouts/views/payout_details_screen.dart';
+import '../../features/payouts/views/payouts_screen.dart';
 import '../../features/profile/views/profile_screen.dart';
 
 /// ─────────────────────────────────────────────────
@@ -157,8 +160,18 @@ class AppRouter {
               GoRoute(
                 path: RouteNames.payout,
                 name: 'payout',
-                builder: (context, state) =>
-                    const _PlaceholderScreen(title: 'المدفوعات'),
+                builder: (context, state) {
+                  PayoutsBinding().dependencies();
+                  return const PayoutsScreen();
+                },
+                routes: [
+                  GoRoute(
+                    path: 'details',
+                    name: 'payoutDetails',
+                    builder: (context, state) =>
+                        PayoutDetailsScreen(payout: state.extra as PayoutModel),
+                  ),
+                ],
               ),
             ],
           ),
@@ -196,28 +209,6 @@ class AppRouter {
 }
 
 // ─── شاشة عنصر نائب للمسارات المستقبلية ─────────────
-class _PlaceholderScreen extends StatelessWidget {
-  const _PlaceholderScreen({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(title, style: const TextStyle(fontFamily: 'Cairo')),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-      ),
-      body: Center(
-        child: Text(
-          'قريباً — $title',
-          style: const TextStyle(fontFamily: 'Cairo', fontSize: 18),
-        ),
-      ),
-    );
-  }
-}
 
 /// Legacy compatibility — AppRoutes used by older code
 class AppRoutes {
