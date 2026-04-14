@@ -7,6 +7,8 @@ import 'package:roya/core/storage/secure_storage.dart';
 import 'package:roya/core/theme/app_colors.dart';
 import 'package:roya/features/auth/data/repositories/auth_repository.dart';
 import 'package:roya/features/profile/controllers/profile_controller.dart';
+import 'package:roya/features/profile/views/store_settings_screen.dart';
+import 'package:roya/features/profile/views/working_hours_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -173,10 +175,140 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     color: Colors.black54,
                                   ),
                                 ),
+                              // Open/Closed Status
+                              if (user.isOpen != null)
+                                Container(
+                                  margin: const EdgeInsets.only(top: 6),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: user.isOpen!
+                                        ? Colors.green.withOpacity(0.1)
+                                        : Colors.red.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: user.isOpen!
+                                          ? Colors.green.withOpacity(0.3)
+                                          : Colors.red.withOpacity(0.3),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        user.isOpen!
+                                            ? Icons.check_circle
+                                            : Icons.cancel,
+                                        size: 16,
+                                        color: user.isOpen!
+                                            ? Colors.green
+                                            : Colors.red,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        user.isOpen! ? 'مفتوح الآن' : 'مغلق الآن',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: user.isOpen!
+                                              ? Colors.green.shade700
+                                              : Colors.red.shade700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              // Working Hours
+                              if (user.openTime != null && user.closeTime != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 6),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.access_time,
+                                        size: 14,
+                                        color: Colors.grey,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '${user.openTime} - ${user.closeTime}',
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                             ],
                           ),
                         ),
                       ],
+                    ),
+                    const Divider(height: 24),
+                    // Store Settings Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const StoreSettingsScreen(),
+                            ),
+                          );
+                          // Refresh profile after settings update
+                          if (mounted) {
+                            c.fetchProfile();
+                          }
+                        },
+                        icon: const Icon(Icons.settings_outlined),
+                        label: const Text(
+                          'إعدادات المتجر',
+                          style: TextStyle(fontFamily: 'Cairo'),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          side: BorderSide(color: AppColors.primary),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Working Hours Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const WorkingHoursScreen(),
+                            ),
+                          );
+                          // Refresh profile after working hours update
+                          if (mounted) {
+                            c.fetchProfile();
+                          }
+                        },
+                        icon: const Icon(Icons.access_time_filled),
+                        label: const Text(
+                          'ساعات العمل',
+                          style: TextStyle(fontFamily: 'Cairo'),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          side: BorderSide(color: AppColors.primary),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),

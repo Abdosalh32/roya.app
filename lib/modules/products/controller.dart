@@ -55,7 +55,7 @@ class ProductsController extends GetxController {
     }
   }
 
-  Future<void> createProduct(
+  Future<Product?> createProduct(
     Map<String, dynamic> data,
     List<XFile> images,
   ) async {
@@ -65,6 +65,7 @@ class ProductsController extends GetxController {
       final created = await repository.createProduct(data, files);
       products.add(created);
       applyFilters();
+      return created;
     } catch (e) {
       Get.snackbar(
         'Error',
@@ -72,6 +73,7 @@ class ProductsController extends GetxController {
         backgroundColor: const Color(0xFFD32F2F),
         colorText: const Color(0xFFFFFFFF),
       );
+      return null;
     } finally {
       isLoading.value = false;
     }
@@ -118,8 +120,23 @@ class ProductsController extends GetxController {
 
   Future<void> toggleProductActive(int id, bool isActive) async {
     try {
-      await repository.toggleProductActive(id, isActive);
+      // Find the product to check its quantity
       final idx = products.indexWhere((p) => p.id == id);
+      if (idx >= 0) {
+        final p = products[idx];
+        // Don't allow activation if quantity is 0 or null
+        if (isActive && (p.quantity == null || p.quantity == 0)) {
+          Get.snackbar(
+            'تنبيه',
+            'لا يمكن تفعيل المنتج والكمية 0. يرجى تحديث الكمية أولاً',
+            backgroundColor: const Color(0xFFFF9800),
+            colorText: const Color(0xFFFFFFFF),
+          );
+          return;
+        }
+      }
+
+      await repository.toggleProductActive(id, isActive);
       if (idx >= 0) {
         final p = products[idx];
         products[idx] = p.copyWith(isActive: isActive);
@@ -198,6 +215,41 @@ class ProductsController extends GetxController {
         backgroundColor: const Color(0xFFD32F2F),
         colorText: const Color(0xFFFFFFFF),
       );
+    }
+  }
+
+  // Variant Types & Options
+  Future<ProductVariantType> createVariantType(
+    int productId,
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      return await repository.createVariantType(productId, data);
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        e.toString(),
+        backgroundColor: const Color(0xFFD32F2F),
+        colorText: const Color(0xFFFFFFFF),
+      );
+      rethrow;
+    }
+  }
+
+  Future<ProductVariantOption> createVariantOption(
+    int typeId,
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      return await repository.createVariantOption(typeId, data);
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        e.toString(),
+        backgroundColor: const Color(0xFFD32F2F),
+        colorText: const Color(0xFFFFFFFF),
+      );
+      rethrow;
     }
   }
 }

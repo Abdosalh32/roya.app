@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:roya/features/auth/data/models/login_model.dart';
@@ -28,6 +30,33 @@ class ProfileController extends GetxController {
     } catch (e) {
       errorMessage.value = e.toString();
       debugPrint('Error fetching profile: \$e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<bool> updateProfile({
+    Map<String, dynamic>? payload,
+    File? logoFile,
+    File? bannerFile,
+  }) async {
+    try {
+      isLoading.value = true;
+      errorMessage.value = '';
+
+      final updatePayload = payload ?? {};
+      final updatedProfile = await repository.updateProfile(
+        updatePayload,
+        logoFile: logoFile,
+        bannerFile: bannerFile,
+      );
+
+      user.value = updatedProfile;
+      return true;
+    } catch (e) {
+      errorMessage.value = e.toString();
+      debugPrint('Error updating profile: \$e');
+      return false;
     } finally {
       isLoading.value = false;
     }

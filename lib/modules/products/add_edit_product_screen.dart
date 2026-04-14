@@ -28,10 +28,21 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   final TextEditingController price = TextEditingController();
   final TextEditingController comparePrice = TextEditingController();
   final TextEditingController quantity = TextEditingController();
-  bool isActive = true;
   int? categoryId;
 
   final List<XFile> newImages = [];
+  
+  // Variant types management
+  final List<Map<String, dynamic>> variantTypesData = [];
+  // Each item in variantTypesData: {
+  //   'nameAr': TextEditingController,
+  //   'nameEn': TextEditingController,
+  //   'options': List<{
+  //     'valueAr': TextEditingController,
+  //     'valueEn': TextEditingController,
+  //     'extraPrice': TextEditingController,
+  //   }>
+  // }
 
   @override
   void initState() {
@@ -45,7 +56,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       price.text = p.price.toString();
       comparePrice.text = p.comparePrice?.toString() ?? '';
       quantity.text = p.quantity?.toString() ?? '';
-      isActive = p.isActive;
       categoryId = p.categoryId;
     }
   }
@@ -128,12 +138,26 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                         );
                         return;
                       }
+
+                      // Get current categories count before adding
+                      final prevCount = c.categories.length;
+
                       await c.createCategory(
                         nameArController.text,
                         nameEnController.text,
                         isActive: isActiveCategory,
                       );
-                      if (mounted) Navigator.pop(context);
+
+                      // Auto-select the newly added category
+                      if (c.categories.length > prevCount) {
+                        final newCategory = c.categories.last;
+                        if (mounted) {
+                          setState(() => categoryId = newCategory.id);
+                          Navigator.pop(context);
+                        }
+                      } else if (mounted) {
+                        Navigator.pop(context);
+                      }
                     },
                     icon: const Icon(Icons.add),
                     label: const Text('حفظ'),
@@ -151,8 +175,273 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     );
   }
 
+  void _addVariantType() {
+    setState(() {
+      variantTypesData.add({
+        'nameAr': TextEditingController(),
+        'nameEn': TextEditingController(),
+        'options': <Map<String, dynamic>>[],
+      });
+    });
+  }
+
+  void _removeVariantType(int index) {
+    setState(() {
+      variantTypesData[index]['nameAr'].dispose();
+      variantTypesData[index]['nameEn'].dispose();
+      for (var option in variantTypesData[index]['options']) {
+        option['valueAr'].dispose();
+        option['valueEn'].dispose();
+        option['extraPrice'].dispose();
+      }
+      variantTypesData.removeAt(index);
+    });
+  }
+
+  void _addOptionToVariantType(int typeIndex) {
+    setState(() {
+      variantTypesData[typeIndex]['options'].add({
+        'valueAr': TextEditingController(),
+        'valueEn': TextEditingController(),
+        'extraPrice': TextEditingController(text: '0'),
+      });
+    });
+  }
+
+  void _removeOptionFromVariantType(int typeIndex, int optionIndex) {
+    setState(() {
+      variantTypesData[typeIndex]['options'][optionIndex]['valueAr'].dispose();
+      variantTypesData[typeIndex]['options'][optionIndex]['valueEn'].dispose();
+      variantTypesData[typeIndex]['options'][optionIndex]['extraPrice'].dispose();
+      variantTypesData[typeIndex]['options'].removeAt(optionIndex);
+    });
+  }
+
+  Widget _buildVariantTypesSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              'خيارات المنتج (Variants)',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const Spacer(),
+            TextButton.icon(
+              onPressed: _addVariantType,
+              icon: const Icon(Icons.add, size: 20),
+              label: const Text('إضافة نوع'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        if (variantTypesData.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey[300]!),
+            ),
+            child: Center(
+              child: Text(
+                'لا توجد خيارات بعد. اضغط على "إضافة نوع" للبدء.',
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+            ),
+          ),
+        ...variantTypesData.asMap().entries.map((entry) {
+          final typeIndex = entry.key;
+          final typeData = entry.value;
+          return _buildVariantTypeCard(typeIndex, typeData);
+        }).toList(),
+      ],
+    );
+  }
+
+  Widget _buildVariantTypeCard(int typeIndex, Map<String, dynamic> typeData) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'نوع ${typeIndex + 1}',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete_outline, color: Colors.red),
+                onPressed: () => _removeVariantType(typeIndex),
+                tooltip: 'حذف النوع',
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: typeData['nameAr'],
+            decoration: const InputDecoration(
+              labelText: 'الاسم (عربي)',
+              hintText: 'مثال: المقاس، اللون',
+              border: OutlineInputBorder(),
+              isDense: true,
+            ),
+            textDirection: TextDirection.rtl,
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: typeData['nameEn'],
+            decoration: const InputDecoration(
+              labelText: 'Name (EN)',
+              hintText: 'e.g., Size, Color',
+              border: OutlineInputBorder(),
+              isDense: true,
+            ),
+            textDirection: TextDirection.ltr,
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Text(
+                'الخيارات:',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              const Spacer(),
+              TextButton.icon(
+                onPressed: () => _addOptionToVariantType(typeIndex),
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('إضافة خيار'),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          ...typeData['options'].asMap().entries.map((optionEntry) {
+            final optionIndex = optionEntry.key;
+            final optionData = optionEntry.value;
+            return _buildOptionRow(typeIndex, optionIndex, optionData);
+          }).toList(),
+          if (typeData['options'].isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Center(
+                child: Text(
+                  'لا توجد خيارات. اضغط "إضافة خيار" للبدء.',
+                  style: TextStyle(
+                    color: Colors.grey[500],
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOptionRow(int typeIndex, int optionIndex, Map<String, dynamic> optionData) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey[300]!),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: optionData['valueAr'],
+                  decoration: const InputDecoration(
+                    labelText: 'القيمة (عربي)',
+                    hintText: 'مثال: كبير، أحمر',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  textDirection: TextDirection.rtl,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: optionData['valueEn'],
+                  decoration: const InputDecoration(
+                    labelText: 'Value (EN)',
+                    hintText: 'e.g., Large, Red',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  textDirection: TextDirection.ltr,
+                ),
+              ),
+              const SizedBox(width: 8),
+              SizedBox(
+                width: 100,
+                child: TextField(
+                  controller: optionData['extraPrice'],
+                  decoration: const InputDecoration(
+                    labelText: 'سعر إضافي',
+                    isDense: true,
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                  textDirection: TextDirection.ltr,
+                ),
+              ),
+              const SizedBox(width: 4),
+              IconButton(
+                icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                onPressed: () => _removeOptionFromVariantType(typeIndex, optionIndex),
+                tooltip: 'حذف الخيار',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> save() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // Parse quantity
+    final parsedQuantity = quantity.text.isEmpty ? null : int.tryParse(quantity.text);
+
+    // Auto-deactivate if quantity is 0 or null
+    final shouldActivate = parsedQuantity != null && parsedQuantity > 0;
+
     final payload = {
       'name_ar': nameAr.text,
       'name_en': nameEn.text,
@@ -162,18 +451,68 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       'compare_price': comparePrice.text.isEmpty
           ? null
           : double.tryParse(comparePrice.text),
-      'quantity': quantity.text.isEmpty ? null : int.tryParse(quantity.text),
-      'is_active': isActive,
+      'quantity': parsedQuantity,
+      'is_active': shouldActivate, // Auto-set based on quantity
       'category_id': categoryId,
     };
 
-    if (widget.product == null) {
-      await c.createProduct(payload, newImages);
-    } else {
-      await c.updateProduct(widget.product!.id, payload, newImages);
-    }
+    try {
+      if (widget.product == null) {
+        // Create new product
+        final createdProduct = await c.createProduct(payload, newImages);
+        
+        // If product was created and we have variant types, create them
+        if (createdProduct != null && variantTypesData.isNotEmpty) {
+          await _createVariantTypesForProduct(createdProduct.id);
+        }
+      } else {
+        // Update existing product
+        await c.updateProduct(widget.product!.id, payload, newImages);
+        
+        // Note: For editing, we would need a more complex sync strategy for variants
+        // For now, we only create new variants for new products
+        // A full implementation would need variant update/delete endpoints
+      }
 
-    Navigator.of(context).pop();
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      Get.snackbar(
+        'خطأ',
+        'حدث خطأ أثناء حفظ المنتج: ${e.toString()}',
+        backgroundColor: const Color(0xFFD32F2F),
+        colorText: const Color(0xFFFFFFFF),
+      );
+    }
+  }
+
+  Future<void> _createVariantTypesForProduct(int productId) async {
+    for (var typeData in variantTypesData) {
+      // Create variant type
+      final typePayload = {
+        'name_ar': typeData['nameAr'].text,
+        'name_en': typeData['nameEn'].text,
+        'sort_order': 0,
+      };
+
+      final createdType = await c.createVariantType(productId, typePayload);
+
+      // Create options for this variant type
+      if (createdType.id != null) {
+        for (var optionData in typeData['options']) {
+          final optionPayload = {
+            'value_ar': optionData['valueAr'].text,
+            'value_en': optionData['valueEn'].text,
+            'extra_price': double.tryParse(optionData['extraPrice'].text) ?? 0.0,
+            'is_active': true,
+            'sort_order': 0,
+          };
+
+          await c.createVariantOption(createdType.id!, optionPayload);
+        }
+      }
+    }
   }
 
   List<Widget> _buildExistingImages(Product? p) {
@@ -321,7 +660,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   textDirection: TextDirection.ltr,
                 ),
                 const SizedBox(height: 8),
-                Row(
+                Obx(() => Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
@@ -334,6 +673,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                             child: Text('اختر تصنيف'),
                           ),
                           ...c.categories
+                              .where((cat) => cat.isActive)
                               .map(
                                 (cat) => DropdownMenuItem<int?>(
                                   value: cat.id,
@@ -364,7 +704,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                       ),
                     ),
                   ],
-                ),
+                )),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: price,
@@ -388,11 +728,32 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   keyboardType: TextInputType.number,
                 ),
                 const SizedBox(height: 12),
-                SwitchListTile(
-                  title: const Text('نشط'),
-                  value: isActive,
-                  onChanged: (v) => setState(() => isActive = v),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'سيتم تعطيل المنتج تلقائيًا إذا كانت الكمية 0',
+                          style: TextStyle(
+                            color: Colors.blue.shade700,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+                const SizedBox(height: 20),
+                // Variant Types Section
+                _buildVariantTypesSection(),
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: save,

@@ -102,4 +102,28 @@ class ProductsRepository {
   Future<void> deleteCategory(int id) async {
     await dio.delete('/api/shop-owner/categories/$id');
   }
+
+  // Variant Types
+  Future<ProductVariantType> createVariantType(
+    int productId,
+    Map<String, dynamic> payload,
+  ) async {
+    final resp = await dio.post(
+      '/api/shop-owner/products/$productId/variant-types',
+      data: payload,
+    );
+    return ProductVariantType.fromJson(resp.data['data'] as Map<String, dynamic>);
+  }
+
+  // Variant Options
+  Future<ProductVariantOption> createVariantOption(
+    int typeId,
+    Map<String, dynamic> payload,
+  ) async {
+    final resp = await dio.post(
+      '/api/shop-owner/variant-types/$typeId/options',
+      data: payload,
+    );
+    return ProductVariantOption.fromJson(resp.data['data'] as Map<String, dynamic>);
+  }
 }
