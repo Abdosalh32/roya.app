@@ -105,6 +105,8 @@ class AppRouter {
               customerName: order.customerName,
               customerCity: order.customerAddress ?? 'حي الأندلس، طرابلس',
               customerPhone: '',
+              driverName: order.driverName,
+              driverPhone: null, // Driver phone not available in OrderModel
               products: [
                 const OrderProductItem(
                   name: 'محفظة جلدية',

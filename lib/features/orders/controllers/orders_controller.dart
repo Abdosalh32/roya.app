@@ -415,10 +415,9 @@ class OrdersController extends GetxController {
     final elapsed = _timeElapsed(createdAt);
     final date = _dateLabel(createdAt);
 
-    final driverMap = json['driver'] as Map<String, dynamic>?;
-    final driverName = (json['driver_name'] ?? driverMap?['name'])?.toString();
-    final driverAvatar = (json['driver_avatar'] ?? driverMap?['avatar'])
-        ?.toString();
+    final driverMap = json['collector_driver'] as Map<String, dynamic>?;
+    final driverName = driverMap?['name']?.toString();
+    final driverAvatar = driverMap?['avatar']?.toString();
 
     final itemsCount = (json['item_count'] is int)
         ? json['item_count'] as int

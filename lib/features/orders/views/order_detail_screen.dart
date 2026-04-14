@@ -43,6 +43,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   String _errorMessage = '';
   final Dio _dio = Get.find<DioClient>().dio;
   int? _actionOrderId;
+  final TextEditingController _rejectionReasonController = TextEditingController();
 
   final List<String> availableDrivers = [
     'أحمد محمد - سيارة فان',
@@ -73,6 +74,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       customerName: initialName,
       customerCity: 'حي الأندلس، طرابلس',
       customerPhone: '+218910000001',
+      driverName: widget.driverName,
+      driverPhone: null,
       products: [
         const OrderProductItem(
           name: 'محفظة جلدية',
@@ -225,6 +228,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     );
     final statusRaw = (json['status'] ?? '').toString().toLowerCase();
 
+    final driver = json['collector_driver'] as Map<String, dynamic>?;
+
     detail = OrderDetailModel(
       orderNumber: orderNumber.endsWith('#') ? orderNumber : '$orderNumber#',
       status: _statusLabel(statusRaw),
@@ -248,6 +253,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             json['customer_phone'] ?? customer?['phone'] ?? user?['phone'],
           ) ??
           detail.customerPhone),
+      driverName: _cleanString(
+        driver?['name'],
+      ),
+      driverPhone: _cleanString(
+        driver?['phone'],
+      ),
       products: items,
       paymentMethod: (json['payment_method'] ?? detail.paymentMethod)
           .toString(),
@@ -257,11 +268,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     );
 
     currentStatus = detail.status;
-    selectedDriver =
-        (json['driver_name'] ??
-                (json['driver'] as Map<String, dynamic>?)?['name'] ??
-                selectedDriver)
-            ?.toString();
+    selectedDriver = detail.driverName ?? selectedDriver;
 
     try {
       final controller = Get.find<OrdersController>();
@@ -386,8 +393,17 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         'عميل';
   }
 
-  Future<void> _callCustomer() async {
-    final rawPhone = detail.customerPhone;
+  Future<void> _callDriver() async {
+    final rawPhone = detail.driverPhone;
+    if (rawPhone == null || rawPhone.trim().isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('رقم الهاتف غير متوفر')));
+      }
+      return;
+    }
+
     final phone = rawPhone.replaceAll(RegExp(r'[^0-9+]'), '');
 
     if (phone.isEmpty) {
@@ -443,9 +459,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     }
   }
 
-  Future<void> _copyCustomerPhone() async {
-    final phone = detail.customerPhone.trim();
-    if (phone.isEmpty) {
+  Future<void> _copyDriverPhone() async {
+    final phone = detail.driverPhone?.trim();
+    if (phone == null || phone.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -573,15 +589,25 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     }
   }
 
-  Future<void> _rejectOrder() async {
+  Future<void> _rejectOrder({String? reason}) async {
     final backendId = _actionOrderId ?? _resolvedBackendId;
     if (backendId == null || _isSubmitting) return;
+
+    final rejectionReason = reason?.trim() ?? _rejectionReasonController.text.trim();
+    if (rejectionReason.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('rejection_reason_required'.tr)),
+        );
+      }
+      return;
+    }
 
     try {
       setState(() => _isSubmitting = true);
       await _dio.put(
         '/api/shop-owner/orders/$backendId/reject',
-        data: {'reason': 'Rejected by shop owner'},
+        data: {'reason': rejectionReason},
       );
       _updateStatus('status_rejected'.tr);
       if (Get.isRegistered<OrdersController>()) {
@@ -599,7 +625,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           try {
             await _dio.put(
               '/api/shop-owner/orders/$discoveredId/reject',
-              data: {'reason': 'Rejected by shop owner'},
+              data: {'reason': rejectionReason},
             );
             _updateStatus('status_rejected'.tr);
             if (Get.isRegistered<OrdersController>()) {
@@ -759,15 +785,15 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         ),
                         SizedBox(height: 16.h),
 
-                        // Customer Card
-                        CustomerInfoCard(
-                          name: detail.customerName,
-                          address: detail.customerCity,
-                          phone: detail.customerPhone,
-                          onCall: _callCustomer,
-                          onCopyPhone: _copyCustomerPhone,
-                        ),
-                        SizedBox(height: 16.h),
+                        // Driver Card
+                        if (detail.driverName != null)
+                          DriverInfoCard(
+                            name: detail.driverName!,
+                            phone: detail.driverPhone,
+                            onCall: detail.driverPhone != null ? _callDriver : null,
+                            onCopyPhone: detail.driverPhone != null ? _copyDriverPhone : null,
+                          ),
+                        if (detail.driverName != null) SizedBox(height: 16.h),
 
                         // Products Card
                         if (detail.statusRaw == 'pending' ||
@@ -1216,35 +1242,107 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   void _showConfirmDialog({required bool isAccept}) {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(
-          isAccept ? 'dialog_accept_title'.tr : 'dialog_reject_title'.tr,
-        ),
-        content: Text(
-          isAccept ? 'dialog_accept_body'.tr : 'dialog_reject_body'.tr,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('btn_cancel'.tr),
+    if (!isAccept) {
+      // Show rejection dialog with reason input
+      showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text('dialog_reject_title'.tr),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'dialog_reject_body'.tr,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              SizedBox(height: 16.h),
+              TextField(
+                controller: _rejectionReasonController,
+                maxLines: 3,
+                maxLength: 500,
+                autofocus: true,
+                style: AppTextStyles.bodyMedium,
+                decoration: InputDecoration(
+                  hintText: 'rejection_reason_hint'.tr,
+                  hintStyle: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 12.h,
+                  ),
+                  counterStyle: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: _isSubmitting
-                ? null
-                : () async {
-                    Navigator.of(ctx).pop();
-                    if (isAccept) {
+          actions: [
+            TextButton(
+              onPressed: () {
+                _rejectionReasonController.clear();
+                Navigator.of(ctx).pop();
+              },
+              child: Text('btn_cancel'.tr),
+            ),
+            TextButton(
+              onPressed: _isSubmitting
+                  ? null
+                  : () async {
+                      final reason = _rejectionReasonController.text.trim();
+                      if (reason.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('rejection_reason_required'.tr),
+                          ),
+                        );
+                        return;
+                      }
+                      Navigator.of(ctx).pop();
+                      await _rejectOrder(reason: reason);
+                    },
+              child: Text('btn_reject'.tr),
+            ),
+          ],
+        ),
+      );
+    } else {
+      // Show accept dialog (unchanged)
+      showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text('dialog_accept_title'.tr),
+          content: Text('dialog_accept_body'.tr),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text('btn_cancel'.tr),
+            ),
+            TextButton(
+              onPressed: _isSubmitting
+                  ? null
+                  : () async {
+                      Navigator.of(ctx).pop();
                       await _acceptOrder();
-                    } else {
-                      await _rejectOrder();
-                    }
-                  },
-            child: Text(isAccept ? 'btn_accept'.tr : 'btn_reject'.tr),
-          ),
-        ],
-      ),
-    );
+                    },
+              child: Text('btn_accept'.tr),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _rejectionReasonController.dispose();
+    super.dispose();
   }
 }

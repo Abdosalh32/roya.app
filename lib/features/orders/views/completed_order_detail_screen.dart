@@ -13,8 +13,8 @@ class CompletedOrderDetailScreen extends StatelessWidget {
 
   const CompletedOrderDetailScreen({super.key, required this.order});
 
-  Future<void> _callCustomer(BuildContext context) async {
-    final phone = order.customerPhone.replaceAll(RegExp(r'[^0-9+]'), '');
+  Future<void> _callDriver(BuildContext context) async {
+    final phone = (order.driverPhone ?? '').replaceAll(RegExp(r'[^0-9+]'), '');
     if (phone.isEmpty) {
       ScaffoldMessenger.of(
         context,
@@ -63,8 +63,8 @@ class CompletedOrderDetailScreen extends StatelessWidget {
     }
   }
 
-  Future<void> _copyCustomerPhone(BuildContext context) async {
-    final phone = order.customerPhone.trim();
+  Future<void> _copyDriverPhone(BuildContext context) async {
+    final phone = (order.driverPhone ?? '').trim();
     if (phone.isEmpty) {
       ScaffoldMessenger.of(
         context,
@@ -105,15 +105,15 @@ class CompletedOrderDetailScreen extends StatelessWidget {
                   const OrderStatusTimeline(currentIndex: 4),
                   SizedBox(height: 16.h),
 
-                  // Customer Card
-                  CustomerInfoCard(
-                    name: order.customerName,
-                    address: order.customerCity,
-                    phone: order.customerPhone,
-                    onCall: () => _callCustomer(context),
-                    onCopyPhone: () => _copyCustomerPhone(context),
-                  ),
-                  SizedBox(height: 16.h),
+                  // Driver Card
+                  if (order.driverName != null)
+                    DriverInfoCard(
+                      name: order.driverName!,
+                      phone: order.driverPhone,
+                      onCall: order.driverPhone != null ? () => _callDriver(context) : null,
+                      onCopyPhone: order.driverPhone != null ? () => _copyDriverPhone(context) : null,
+                    ),
+                  if (order.driverName != null) SizedBox(height: 16.h),
 
                   // Products Card
                   ProductsListCard(

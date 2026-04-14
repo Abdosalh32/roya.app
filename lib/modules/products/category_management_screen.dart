@@ -3,12 +3,24 @@ import 'package:get/get.dart';
 import 'package:roya/core/theme/app_colors.dart';
 import 'package:roya/modules/products/controller.dart';
 
-class CategoryManagementScreen extends StatelessWidget {
-  CategoryManagementScreen({Key? key}) : super(key: key);
-  final ProductsController c = Get.find();
+class CategoryManagementScreen extends StatefulWidget {
+  const CategoryManagementScreen({super.key});
 
+  @override
+  State<CategoryManagementScreen> createState() => _CategoryManagementScreenState();
+}
+
+class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
+  final ProductsController c = Get.find();
   final TextEditingController _nameAr = TextEditingController();
   final TextEditingController _nameEn = TextEditingController();
+
+  @override
+  void dispose() {
+    _nameAr.dispose();
+    _nameEn.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,9 +30,9 @@ class CategoryManagementScreen extends StatelessWidget {
         backgroundColor: AppColors.primary,
       ),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: AppColors.primary,
         child: const Icon(Icons.add),
         onPressed: () => _showAdd(context),
-        backgroundColor: AppColors.primary,
       ),
       body: Obx(() {
         return ListView.separated(
@@ -47,7 +59,7 @@ class CategoryManagementScreen extends StatelessWidget {
                     IconButton(
                       icon: const Icon(Icons.edit),
                       onPressed: () =>
-                          _showEdit(context, cat.id, cat.nameAr, cat.nameEn),
+                          _showEdit(context, cat.id, cat.nameAr, cat.nameEn, cat.isActive),
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete),
@@ -85,62 +97,174 @@ class CategoryManagementScreen extends StatelessWidget {
   void _showAdd(BuildContext context) {
     _nameAr.clear();
     _nameEn.clear();
+    bool isActive = true;
+    
     showModalBottomSheet(
       context: context,
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _nameAr,
-              decoration: const InputDecoration(labelText: 'الاسم (عربي)'),
+      isScrollControlled: true,
+      builder: (_) => StatefulBuilder(
+        builder: (context, setState) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: 16,
+            right: 16,
+            top: 16,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'إضافة تصنيف جديد',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _nameAr,
+                  decoration: const InputDecoration(
+                    labelText: 'الاسم (عربي)',
+                    border: OutlineInputBorder(),
+                  ),
+                  textDirection: TextDirection.rtl,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _nameEn,
+                  decoration: const InputDecoration(
+                    labelText: 'Name (EN)',
+                    border: OutlineInputBorder(),
+                  ),
+                  textDirection: TextDirection.ltr,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    const Text('نشط'),
+                    const SizedBox(width: 8),
+                    Switch(
+                      value: isActive,
+                      onChanged: (value) {
+                        setState(() => isActive = value);
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      if (_nameAr.text.isEmpty || _nameEn.text.isEmpty) {
+                        Get.snackbar(
+                          'خطأ',
+                          'يرجى ملء جميع الحقول',
+                          backgroundColor: const Color(0xFFD32F2F),
+                          colorText: const Color(0xFFFFFFFF),
+                        );
+                        return;
+                      }
+                      await c.createCategory(_nameAr.text, _nameEn.text, isActive: isActive);
+                      if (context.mounted) Navigator.pop(context);
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text('حفظ'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
             ),
-            TextField(
-              controller: _nameEn,
-              decoration: const InputDecoration(labelText: 'Name (EN)'),
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: () async {
-                await c.createCategory(_nameAr.text, _nameEn.text);
-                Navigator.pop(context);
-              },
-              child: const Text('حفظ'),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  void _showEdit(BuildContext context, int id, String nameAr, String nameEn) {
+  void _showEdit(BuildContext context, int id, String nameAr, String nameEn, bool currentIsActive) {
     _nameAr.text = nameAr;
     _nameEn.text = nameEn;
+    bool isActive = currentIsActive;
+    
     showModalBottomSheet(
       context: context,
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _nameAr,
-              decoration: const InputDecoration(labelText: 'الاسم (عربي)'),
+      isScrollControlled: true,
+      builder: (_) => StatefulBuilder(
+        builder: (context, setState) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: 16,
+            right: 16,
+            top: 16,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'تعديل التصنيف',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _nameAr,
+                  decoration: const InputDecoration(
+                    labelText: 'الاسم (عربي)',
+                    border: OutlineInputBorder(),
+                  ),
+                  textDirection: TextDirection.rtl,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _nameEn,
+                  decoration: const InputDecoration(
+                    labelText: 'Name (EN)',
+                    border: OutlineInputBorder(),
+                  ),
+                  textDirection: TextDirection.ltr,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    const Text('نشط'),
+                    const SizedBox(width: 8),
+                    Switch(
+                      value: isActive,
+                      onChanged: (value) {
+                        setState(() => isActive = value);
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      if (_nameAr.text.isEmpty || _nameEn.text.isEmpty) {
+                        Get.snackbar(
+                          'خطأ',
+                          'يرجى ملء جميع الحقول',
+                          backgroundColor: const Color(0xFFD32F2F),
+                          colorText: const Color(0xFFFFFFFF),
+                        );
+                        return;
+                      }
+                      await c.updateCategory(id, _nameAr.text, _nameEn.text, isActive);
+                      if (context.mounted) Navigator.pop(context);
+                    },
+                    icon: const Icon(Icons.save),
+                    label: const Text('حفظ'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
             ),
-            TextField(
-              controller: _nameEn,
-              decoration: const InputDecoration(labelText: 'Name (EN)'),
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: () async {
-                await c.updateCategory(id, _nameAr.text, _nameEn.text, true);
-                Navigator.pop(context);
-              },
-              child: const Text('حفظ'),
-            ),
-          ],
+          ),
         ),
       ),
     );

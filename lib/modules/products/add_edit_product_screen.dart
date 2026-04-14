@@ -59,6 +59,98 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     if (res != null) setState(() => newImages.add(res));
   }
 
+  void _showAddCategoryDialog() {
+    final nameArController = TextEditingController();
+    final nameEnController = TextEditingController();
+    bool isActiveCategory = true;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => StatefulBuilder(
+        builder: (context, setState) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: 16,
+            right: 16,
+            top: 16,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'إضافة تصنيف جديد',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: nameArController,
+                  decoration: const InputDecoration(
+                    labelText: 'الاسم (عربي)',
+                    border: OutlineInputBorder(),
+                  ),
+                  textDirection: TextDirection.rtl,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: nameEnController,
+                  decoration: const InputDecoration(
+                    labelText: 'Name (EN)',
+                    border: OutlineInputBorder(),
+                  ),
+                  textDirection: TextDirection.ltr,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    const Text('نشط'),
+                    const SizedBox(width: 8),
+                    Switch(
+                      value: isActiveCategory,
+                      onChanged: (value) {
+                        setState(() => isActiveCategory = value);
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      if (nameArController.text.isEmpty || nameEnController.text.isEmpty) {
+                        Get.snackbar(
+                          'خطأ',
+                          'يرجى ملء جميع الحقول',
+                          backgroundColor: const Color(0xFFD32F2F),
+                          colorText: const Color(0xFFFFFFFF),
+                        );
+                        return;
+                      }
+                      await c.createCategory(
+                        nameArController.text,
+                        nameEnController.text,
+                        isActive: isActiveCategory,
+                      );
+                      if (mounted) Navigator.pop(context);
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text('حفظ'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> save() async {
     if (!_formKey.currentState!.validate()) return;
     final payload = {
@@ -229,25 +321,49 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   textDirection: TextDirection.ltr,
                 ),
                 const SizedBox(height: 8),
-                DropdownButtonFormField<int?>(
-                  value: categoryId,
-                  validator: (v) => v == null ? 'الرجاء اختيار تصنيف' : null,
-                  items: [
-                    const DropdownMenuItem<int?>(
-                      value: null,
-                      child: Text('اختر تصنيف'),
-                    ),
-                    ...c.categories
-                        .map(
-                          (cat) => DropdownMenuItem<int?>(
-                            value: cat.id,
-                            child: Text(cat.nameAr),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<int?>(
+                        value: categoryId,
+                        validator: (v) => v == null ? 'الرجاء اختيار تصنيف' : null,
+                        items: [
+                          const DropdownMenuItem<int?>(
+                            value: null,
+                            child: Text('اختر تصنيف'),
                           ),
-                        )
-                        .toList(),
+                          ...c.categories
+                              .map(
+                                (cat) => DropdownMenuItem<int?>(
+                                  value: cat.id,
+                                  child: Text(cat.nameAr),
+                                ),
+                              )
+                              .toList(),
+                        ],
+                        onChanged: (v) => setState(() => categoryId = v),
+                        decoration: const InputDecoration(labelText: 'التصنيف'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    InkWell(
+                      onTap: _showAddCategoryDialog,
+                      borderRadius: BorderRadius.circular(28),
+                      child: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(28),
+                        ),
+                        child: const Icon(
+                          Icons.add,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
                   ],
-                  onChanged: (v) => setState(() => categoryId = v),
-                  decoration: const InputDecoration(labelText: 'التصنيف'),
                 ),
                 const SizedBox(height: 8),
                 TextFormField(

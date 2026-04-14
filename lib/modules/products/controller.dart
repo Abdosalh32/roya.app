@@ -153,9 +153,9 @@ class ProductsController extends GetxController {
   }
 
   // Category methods
-  Future<void> createCategory(String nameAr, String nameEn) async {
+  Future<void> createCategory(String nameAr, String nameEn, {bool isActive = true}) async {
     try {
-      final cat = await repository.createCategory(nameAr, nameEn);
+      final cat = await repository.createCategory(nameAr, nameEn, isActive: isActive);
       categories.add(cat);
     } catch (e) {
       Get.snackbar(

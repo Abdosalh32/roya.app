@@ -68,14 +68,14 @@ class ProductsRepository {
   }
 
   // Categories
-  Future<ShopCategory> createCategory(String nameAr, String nameEn) async {
+  Future<ShopCategory> createCategory(String nameAr, String nameEn, {bool isActive = true}) async {
     final resp = await dio.post(
       '/api/shop-owner/categories',
       data: {
         'name_ar': nameAr,
         'name_en': nameEn,
         'sort_order': 0,
-        'is_active': true,
+        'is_active': isActive,
       },
     );
     return ShopCategory.fromJson(resp.data['data'] as Map<String, dynamic>);

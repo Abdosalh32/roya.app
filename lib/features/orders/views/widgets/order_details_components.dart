@@ -402,6 +402,121 @@ class CustomerInfoCard extends StatelessWidget {
   }
 }
 
+/// ─── Driver Card (Image Right, Call Left) ───
+class DriverInfoCard extends StatelessWidget {
+  final String name;
+  final String? phone;
+  final VoidCallback? onCall;
+  final VoidCallback? onCopyPhone;
+
+  const DriverInfoCard({
+    super.key,
+    required this.name,
+    this.phone,
+    this.onCall,
+    this.onCopyPhone,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasPhone = phone != null && phone!.isNotEmpty;
+    
+    return _BaseSectionCard(
+      title: 'driver_info'.tr,
+      icon: Icons.delivery_dining_rounded,
+      child: Padding(
+        padding: EdgeInsets.all(20.w),
+        child: Row(
+          children: [
+            // Details (Center)
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: AppTextStyles.headingSmall.copyWith(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Cairo',
+                    ),
+                    textAlign: TextAlign.start,
+                  ),
+                  if (hasPhone) ...[
+                    SizedBox(height: 6.h),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.phone_outlined,
+                          size: 14.sp,
+                          color: const Color(0xFF94A3B8),
+                        ),
+                        SizedBox(width: 4.w),
+                        Expanded(
+                          child: Text(
+                            phone!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: const Color(0xFF64748B),
+                              fontSize: 12.sp,
+                              fontFamily: 'Cairo',
+                            ),
+                          ),
+                        ),
+                        if (onCopyPhone != null) ...[
+                          SizedBox(width: 6.w),
+                          GestureDetector(
+                            onTap: onCopyPhone,
+                            child: Container(
+                              width: 28.w,
+                              height: 28.w,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                              child: Icon(
+                                Icons.copy_rounded,
+                                size: 14.sp,
+                                color: const Color(0xFF475569),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (hasPhone && onCall != null) ...[
+              SizedBox(width: 12.w),
+              // Phone Button (Left in Arabic/RTL)
+              GestureDetector(
+                onTap: onCall,
+                child: Container(
+                  width: 44.w,
+                  height: 44.w,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEEF2FF), // Light Blue
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: Icon(
+                    Icons.phone_rounded,
+                    color: const Color(0xFF4F46E5), // Indigo
+                    size: 20.sp,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// ─── Products Card (Redesigned) ───
 class ProductsListCard extends StatelessWidget {
   final List<ProductItemData> products;
@@ -580,26 +695,30 @@ class DeliveryDetailsCard extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          'driver_label'.tr,
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: const Color(0xFF64748B),
-                            fontSize: 11.sp,
+                    Flexible(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            'driver_label'.tr,
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: const Color(0xFF64748B),
+                              fontSize: 11.sp,
+                            ),
                           ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          driverName ?? '—',
-                          style: AppTextStyles.headingSmall.copyWith(
-                            color: const Color(0xFF1E293B),
-                            fontSize: 15.sp,
-                            fontWeight: FontWeight.bold,
+                          SizedBox(height: 4.h),
+                          Text(
+                            driverName ?? '—',
+                            style: AppTextStyles.headingSmall.copyWith(
+                              color: const Color(0xFF1E293B),
+                              fontSize: 15.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                     SizedBox(width: 12.w),
                     Container(
