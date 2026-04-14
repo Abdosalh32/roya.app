@@ -86,7 +86,9 @@ class OngoingOrderCard extends StatelessWidget {
                         ),
                       ),
                       child: Text(
-                        order.status,
+                        order.statusRaw == 'awaiting_customer_modification'
+                            ? 'يحتاج ردك 🔴'
+                            : order.status,
                         style: AppTextStyles.bodySmall.copyWith(
                           color: _getStatusTextColor(),
                           fontWeight: FontWeight.bold,
@@ -267,6 +269,8 @@ class OngoingOrderCard extends StatelessWidget {
   }
 
   Color _getStatusBgColor() {
+    if (order.statusRaw == 'awaiting_customer_modification')
+      return Colors.red.shade50;
     if (order.status == 'ongoing_status_waiting_pickup'.tr) {
       return const Color(0xFFE3F2FD);
     } else if (order.status == 'ongoing_status_preparing'.tr) {
@@ -276,6 +280,8 @@ class OngoingOrderCard extends StatelessWidget {
   }
 
   Color _getStatusBorderColor() {
+    if (order.statusRaw == 'awaiting_customer_modification')
+      return Colors.red.shade700;
     if (order.status == 'ongoing_status_waiting_pickup'.tr) {
       return const Color(0xFF1976D2);
     } else if (order.status == 'ongoing_status_preparing'.tr) {
@@ -285,6 +291,8 @@ class OngoingOrderCard extends StatelessWidget {
   }
 
   Color _getStatusTextColor() {
+    if (order.statusRaw == 'awaiting_customer_modification')
+      return Colors.red.shade700;
     if (order.status == 'ongoing_status_waiting_pickup'.tr) {
       return const Color(0xFF1976D2);
     } else if (order.status == 'ongoing_status_preparing'.tr) {

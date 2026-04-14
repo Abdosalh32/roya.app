@@ -148,19 +148,55 @@ class ProductsScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          AspectRatio(
-                            aspectRatio: 1.2,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: primary != null
-                                  ? CachedNetworkImage(
-                                      imageUrl: primary,
-                                      fit: BoxFit.cover,
-                                      errorWidget: (_, __, ___) =>
-                                          Container(color: Colors.grey[200]),
-                                    )
-                                  : Container(color: Colors.grey[200]),
-                            ),
+                          Stack(
+                            children: [
+                              AspectRatio(
+                                aspectRatio: 1.2,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: primary != null
+                                      ? CachedNetworkImage(
+                                          imageUrl: primary,
+                                          fit: BoxFit.cover,
+                                          errorWidget: (_, __, ___) =>
+                                              Container(
+                                                color: Colors.grey[200],
+                                              ),
+                                        )
+                                      : Container(color: Colors.grey[200]),
+                                ),
+                              ),
+                              Positioned(
+                                top: 6,
+                                left: 6,
+                                child: GestureDetector(
+                                  onTap: () => Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          AddEditProductScreen(product: p),
+                                    ),
+                                  ),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black12,
+                                          blurRadius: 4,
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(
+                                      Icons.edit,
+                                      size: 16,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 8),
                           Text(
@@ -196,6 +232,7 @@ class ProductsScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 6),
                           Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Container(
                                 padding: const EdgeInsets.symmetric(
@@ -231,6 +268,14 @@ class ProductsScreen extends StatelessWidget {
                                       ),
                                     ),
                                   ],
+                                ),
+                              ),
+                              Text(
+                                'الكمية: ${p.quantity?.toString() ?? '-'}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ],

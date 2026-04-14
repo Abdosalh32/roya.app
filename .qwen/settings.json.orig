@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/jehad/Herd/Roya/Modules/Order/Http/Controllers/Admin/**)"
+    ]
+  }
+}

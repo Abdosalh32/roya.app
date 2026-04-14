@@ -8,6 +8,7 @@ class RouteNames {
   static const String dashboard = '/dashboard';
   static const String orders = '/orders';
   static const String orderDetail = '/order-detail';
+  static const String orderModification = '/order-modification';
   static const String completedOrderDetail = '/completed-order-detail';
   static const String products = '/products';
   static const String payout = '/payout';

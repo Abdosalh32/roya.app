@@ -51,35 +51,6 @@ class ProductDetailsSection extends GetView<ManualOrderController> {
         ),
         SizedBox(height: 12.h),
         TextFormField(
-          controller: controller.deliveryFeeCtrl,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: InputDecoration(
-            labelText: 'سعر التوصيل',
-            labelStyle: AppTextStyles.bodyMedium,
-            suffixText: 'د.ل',
-            prefixIcon: const Icon(
-              Icons.local_shipping_outlined,
-              color: AppColors.textSecondary,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: const BorderSide(color: AppColors.primary),
-            ),
-            filled: true,
-            fillColor: AppColors.card,
-          ),
-          validator: AppValidators.positiveNumber,
-        ),
-        SizedBox(height: 12.h),
-        TextFormField(
           controller: controller.quantityCtrl,
           keyboardType: TextInputType.number,
           decoration: InputDecoration(
@@ -110,43 +81,6 @@ class ProductDetailsSection extends GetView<ManualOrderController> {
               return 'يجب أن تكون الكمية 1 على الأقل';
             return null;
           },
-        ),
-        SizedBox(height: 12.h),
-        Obx(
-          () => DropdownButtonFormField<String>(
-            initialValue: controller.selectedPackageType.value,
-            decoration: InputDecoration(
-              labelText: 'نوع التغليف',
-              labelStyle: AppTextStyles.bodyMedium,
-              prefixIcon: const Icon(
-                Icons.inventory_2_outlined,
-                color: AppColors.textSecondary,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
-                borderSide: const BorderSide(color: AppColors.border),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
-                borderSide: const BorderSide(color: AppColors.border),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
-                borderSide: const BorderSide(color: AppColors.primary),
-              ),
-              filled: true,
-              fillColor: AppColors.card,
-            ),
-            items: controller.packageTypes.map((type) {
-              return DropdownMenuItem(
-                value: type,
-                child: Text(type, style: AppTextStyles.bodyLarge),
-              );
-            }).toList(),
-            onChanged: (val) {
-              if (val != null) controller.selectedPackageType.value = val;
-            },
-          ),
         ),
         SizedBox(height: 12.h),
         TextFormField(

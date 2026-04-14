@@ -10,4 +10,7 @@ class ApiEndpoints {
   static const String dashboard = '/api/shop/dashboard';
   static const String manualOrders = '/api/shop-owner/manual-orders';
   static const String regions = '/api/customer/regions';
+  static const String deliveryPrice = '/api/delivery/price';
+  static const String customerDeliveryFee = '/api/customer/delivery-fee';
+  static const String shopOwnerDeliveryFee = '/api/shop-owner/delivery-fee';
 }

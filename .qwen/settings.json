@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/jehad/Herd/Roya/Modules/Order/Http/Controllers/Admin/**)",
+      "Read(//Users/jehad/Herd/Roya/Modules/Order/Http/Controllers/ShopOwner/**)",
+      "Read(//Users/jehad/Herd/Roya/Modules/Order/Http/Controllers/Customer/**)",
+      "Read(//Users/jehad/Herd/Roya/Modules/Order/Routes/**)",
+      "Read(//Users/jehad/Herd/Roya/Modules/Order/Http/Controllers/Driver/**)",
+      "Read(//Users/jehad/Herd/Roya/Modules/Order/Services/**)",
+      "Read(//Users/jehad/Herd/Roya/Modules/Transfer/Routes/**)",
+      "Read(//Users/jehad/Herd/Roya/Modules/Wallet/Routes/**)",
+      "Read(//Users/jehad/Herd/Roya/Modules/Order/Entities/**)",
+      "Read(//Users/jehad/Herd/Roya/Modules/Finance/Routes/**)",
+      "Read(//Users/jehad/Herd/Roya/Modules/Warehouse/Routes/**)",
+      "Read(//Users/jehad/Herd/Roya/Modules/Order/Http/Controllers/CustomerService/**)",
+      "Read(//Users/jehad/Herd/Roya/Modules/Wallet/Http/Controllers/Customer/**)",
+      "Read(//Users/jehad/Herd/Roya/Modules/Wallet/Http/Controllers/Admin/**)",
+      "Read(//Users/jehad/Herd/Roya/Modules/Warehouse/Http/Controllers/**)",
+      "Read(//Users/jehad/Herd/Roya/Modules/Shop/Routes/**)",
+      "Read(//Users/jehad/Herd/Roya/Modules/Driver/Routes/**)",
+      "Read(//Users/jehad/Herd/Roya/Modules/Finance/Http/Controllers/Admin/**)",
+      "Read(//Users/jehad/Herd/Roya/Modules/**)"
+    ]
+  },
+  "$version": 3
+}

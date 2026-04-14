@@ -27,6 +27,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   final TextEditingController descEn = TextEditingController();
   final TextEditingController price = TextEditingController();
   final TextEditingController comparePrice = TextEditingController();
+  final TextEditingController quantity = TextEditingController();
   bool isActive = true;
   int? categoryId;
 
@@ -43,6 +44,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       descEn.text = p.descriptionEn ?? '';
       price.text = p.price.toString();
       comparePrice.text = p.comparePrice?.toString() ?? '';
+      quantity.text = p.quantity?.toString() ?? '';
       isActive = p.isActive;
       categoryId = p.categoryId;
     }
@@ -68,6 +70,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       'compare_price': comparePrice.text.isEmpty
           ? null
           : double.tryParse(comparePrice.text),
+      'quantity': quantity.text.isEmpty ? null : int.tryParse(quantity.text),
       'is_active': isActive,
       'category_id': categoryId,
     };
@@ -257,6 +260,14 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   controller: comparePrice,
                   decoration: const InputDecoration(
                     labelText: 'سعر قبل الخصم (اختياري)',
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: quantity,
+                  decoration: const InputDecoration(
+                    labelText: 'الكمية المخزنة (اختياري)',
                   ),
                   keyboardType: TextInputType.number,
                 ),

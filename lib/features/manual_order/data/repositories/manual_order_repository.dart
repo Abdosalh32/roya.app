@@ -15,4 +15,22 @@ class ManualOrderRepository extends GetxService {
   Future<List<RegionModel>> fetchRegions() async {
     return await _orderService.fetchRegions();
   }
+
+  Future<Map<String, dynamic>> fetchDeliveryPrice({
+    int? toRegionId,
+    int? fromRegionId,
+    String? postalCode,
+    double? lat,
+    double? lng,
+    int? shopId,
+  }) async {
+    return await _orderService.fetchDeliveryPrice(
+      toRegionId: toRegionId,
+      fromRegionId: fromRegionId,
+      postalCode: postalCode,
+      lat: lat,
+      lng: lng,
+      shopId: shopId,
+    );
+  }
 }

@@ -28,18 +28,10 @@ class OrdersScreen extends StatelessWidget {
             SizedBox(height: 8.h),
             _buildOrderCategoryToggle(controller),
             SizedBox(height: 16.h),
-            _buildCustomTabBar(controller),
+            _buildFilterMenu(controller),
             SizedBox(height: 16.h),
             Expanded(
-              child: TabBarView(
-                controller: controller.tabController,
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  _buildNewOrdersTab(controller),
-                  _buildOngoingOrdersTab(controller),
-                  _buildCompletedTab(controller),
-                ],
-              ),
+              child: _buildOrdersList(controller),
             ),
           ],
         ),
@@ -140,45 +132,148 @@ class OrdersScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCustomTabBar(OrdersController controller) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 20.w),
-      padding: EdgeInsets.all(4.w),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE8ECF0).withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(12.r),
-      ),
-      child: TabBar(
-        controller: controller.tabController,
-        indicator: BoxDecoration(
-          color: AppColors.card,
-          borderRadius: BorderRadius.circular(10.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
+  Widget _buildFilterMenu(OrdersController controller) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20.w),
+      child: Obx(
+        () => PopupMenuButton<String>(
+          onSelected: (value) {
+            controller.selectedFilter.value = value;
+          },
+          itemBuilder: (context) {
+            final groups = <String, List<FilterOption>>{};
+            for (final option in controller.filterOptions) {
+              groups.putIfAbsent(option.group, () => []).add(option);
+            }
+
+            final items = <PopupMenuEntry<String>>[];
+            for (final entry in groups.entries) {
+              // Add group header (except for 'all')
+              if (entry.key != 'all' && entry.value.isNotEmpty) {
+                items.add(
+                  PopupMenuItem<String>(
+                    enabled: false,
+                    child: Text(
+                      _getGroupLabel(entry.key),
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12.sp,
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              // Add options in this group
+              for (final option in entry.value) {
+                final isSelected = controller.selectedFilter.value == option.value ||
+                    (controller.selectedFilter.value == null && option.value == 'all');
+
+                items.add(
+                  PopupMenuItem<String>(
+                    value: option.value,
+                    child: Row(
+                      children: [
+                        if (isSelected)
+                          Icon(
+                            Icons.check_circle_rounded,
+                            color: AppColors.primary,
+                            size: 20.sp,
+                          )
+                        else
+                          SizedBox(width: 20.sp),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: Text(
+                            option.label.tr,
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : AppColors.textPrimary,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              // Add divider between groups
+              if (entry.key != groups.keys.last) {
+                items.add(const PopupMenuDivider());
+              }
+            }
+
+            return items;
+          },
+          child: Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: 16.w,
+              vertical: 12.h,
             ),
-          ],
+            decoration: BoxDecoration(
+              color: AppColors.card,
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.filter_list_rounded,
+                      color: AppColors.primary,
+                      size: 20.sp,
+                    ),
+                    SizedBox(width: 8.w),
+                    Text(
+                      controller.selectedFilterLabel,
+                      style: AppTextStyles.headingSmall.copyWith(
+                        color: AppColors.textPrimary,
+                        fontSize: 14.sp,
+                      ),
+                    ),
+                  ],
+                ),
+                Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: AppColors.textSecondary,
+                  size: 20.sp,
+                ),
+              ],
+            ),
+          ),
         ),
-        labelColor: const Color(0xFF1976D2),
-        unselectedLabelColor: AppColors.textSecondary,
-        labelStyle: AppTextStyles.headingSmall.copyWith(fontSize: 14.sp),
-        unselectedLabelStyle: AppTextStyles.bodyMedium.copyWith(
-          fontSize: 14.sp,
-        ),
-        indicatorSize: TabBarIndicatorSize.tab,
-        dividerColor: Colors.transparent,
-        tabs: [
-          Tab(text: 'tab_new_orders'.tr),
-          Tab(text: 'tab_ongoing_orders'.tr),
-          Tab(text: 'tab_completed_orders'.tr),
-        ],
       ),
     );
   }
 
-  Widget _buildNewOrdersTab(OrdersController controller) {
+  String _getGroupLabel(String group) {
+    switch (group) {
+      case 'all':
+        return 'filter_all'.tr;
+      case 'new':
+        return 'group_new'.tr;
+      case 'ongoing':
+        return 'group_ongoing'.tr;
+      case 'logistics':
+        return 'group_logistics'.tr;
+      case 'completed':
+        return 'group_completed'.tr;
+      case 'cancelled':
+        return 'group_cancelled'.tr;
+      default:
+        return group;
+    }
+  }
+
+  Widget _buildOrdersList(OrdersController controller) {
     return Builder(
       builder: (context) => RefreshIndicator(
         color: AppColors.primary,
@@ -191,341 +286,53 @@ class OrdersScreen extends StatelessWidget {
               _buildDailyStatsCard(controller),
               SizedBox(height: 16.h),
               Obx(() {
-                if (controller.isLoading.value &&
-                    controller.newOrders.isEmpty) {
+                final orders = controller.filteredOrders;
+
+                if (controller.isLoading.value && orders.isEmpty) {
                   return const Padding(
                     padding: EdgeInsets.all(24),
                     child: Center(child: CircularProgressIndicator()),
                   );
                 }
-                if (controller.errorMessage.value.isNotEmpty &&
-                    controller.newOrders.isEmpty) {
+                if (controller.errorMessage.value.isNotEmpty && orders.isEmpty) {
                   return Padding(
                     padding: const EdgeInsets.all(24),
                     child: Text(controller.errorMessage.value),
                   );
                 }
+                if (orders.isEmpty) {
+                  return Padding(
+                    padding: EdgeInsets.symmetric(vertical: 40.h),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.receipt_long_outlined,
+                          size: 64.sp,
+                          color: AppColors.border,
+                        ),
+                        SizedBox(height: 16.h),
+                        Text(
+                          'no_orders_for_filter'.tr,
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
                 return ListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: controller.newOrders.length,
+                  itemCount: orders.length,
                   itemBuilder: (context, index) {
-                    final order = controller.newOrders[index];
-                    return OrderItemCard(
-                      order: order,
-                      onTap: () => context.push(
-                        RouteNames.orderDetail,
-                        extra: {
-                          'backendId': order.backendId,
-                          'orderId': order.id,
-                          'customerName': order.customerName,
-                          'status': order.status,
-                        },
-                      ),
-                    );
-                  },
-                );
-              }),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+                    final order = orders[index];
+                    final statusRaw = order.statusRaw.toLowerCase();
 
-  Widget _buildOngoingOrdersTab(OrdersController controller) {
-    return Builder(
-      builder: (context) => Obx(() {
-        if (controller.ongoingOrders.isEmpty) {
-          return RefreshIndicator(
-            color: AppColors.primary,
-            onRefresh: controller.fetchOrders,
-            child: ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              children: [
-                SizedBox(height: 140.h),
-                Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.local_shipping_outlined,
-                        size: 64.sp,
-                        color: AppColors.border,
-                      ),
-                      SizedBox(height: 16.h),
-                      Text(
-                        'no_ongoing_orders'.tr,
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        return RefreshIndicator(
-          color: AppColors.primary,
-          onRefresh: controller.fetchOrders,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.symmetric(horizontal: 20.w),
-            child: ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: controller.ongoingOrders.length,
-              itemBuilder: (context, index) {
-                final order = controller.ongoingOrders[index];
-                return OngoingOrderCard(
-                  order: order,
-                  onTap: () => context.push(
-                    RouteNames.orderDetail,
-                    extra: {
-                      'backendId': order.backendId,
-                      'orderId': order.id,
-                      'customerName': order.customerName,
-                      'status': order.status,
-                      'driverName': order.driverName,
-                    },
-                  ),
-                );
-              },
-            ),
-          ),
-        );
-      }),
-    );
-  }
-
-  Widget _buildCompletedTab(OrdersController controller) {
-    return RefreshIndicator(
-      color: AppColors.primary,
-      onRefresh: controller.fetchOrders,
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: EdgeInsets.symmetric(horizontal: 20.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ─── شريط البحث ───
-            Container(
-              decoration: BoxDecoration(
-                color: AppColors.background,
-                borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: TextField(
-                onChanged: (val) => controller.searchQuery.value = val,
-                style: AppTextStyles.bodyMedium,
-                decoration: InputDecoration(
-                  hintText: 'search_completed'.tr,
-                  hintStyle: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                  prefixIcon: Icon(
-                    Icons.search_rounded,
-                    color: AppColors.textSecondary,
-                    size: 20.sp,
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 16.w,
-                    vertical: 12.h,
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: 16.h),
-
-            // ─── بطاقات الإحصائيات ───
-            Row(
-              children: [
-                // بطاقة الإجمالي
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      vertical: 20.h,
-                      horizontal: 16.w,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(20.r),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.3),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        Text(
-                          'total_sales'.tr,
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: Colors.white70,
-                            fontSize: 11.sp,
-                          ),
-                        ),
-                        SizedBox(height: 8.h),
-                        Text(
-                          controller.completedTotalSales.toStringAsFixed(2),
-                          style: AppTextStyles.headingLarge.copyWith(
-                            color: Colors.white,
-                            fontSize: 24.sp,
-                            height: 1,
-                          ),
-                        ),
-                        SizedBox(height: 8.h),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 8.w,
-                            vertical: 2.h,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                          child: Text(
-                            'this_month'.tr,
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: Colors.white,
-                              fontSize: 9.sp,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                SizedBox(width: 16.w),
-                // بطاقة الطلبات المكتملة
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      vertical: 20.h,
-                      horizontal: 16.w,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.card,
-                      borderRadius: BorderRadius.circular(20.r),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: Column(
-                      children: [
-                        Text(
-                          'completed_orders_count'.tr,
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.textSecondary,
-                            fontSize: 11.sp,
-                          ),
-                        ),
-                        SizedBox(height: 8.h),
-                        Text(
-                          '${controller.completedOrders.length}',
-                          style: AppTextStyles.headingLarge.copyWith(
-                            color: AppColors.textPrimary,
-                            fontSize: 24.sp,
-                            height: 1,
-                          ),
-                        ),
-                        SizedBox(height: 8.h),
-                        Text(
-                          '+12%',
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: const Color(0xFFD32F2F),
-                            fontSize: 11.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 24.h),
-
-            // ─── عنوان السجل ───
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'completed_history'.tr,
-                  style: AppTextStyles.headingSmall.copyWith(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 10.w,
-                    vertical: 4.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child: Text(
-                    'today_timeline'.tr,
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.primary,
-                      fontSize: 11.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 16.h),
-
-            // ─── قائمة الطلبات ───
-            Obx(() {
-              final orders = controller.filteredCompletedOrders;
-              if (orders.isEmpty) {
-                return Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 40.h),
-                    child: Text(
-                      'no_completed_orders'.tr,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
-                );
-              }
-
-              return ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: orders.length,
-                itemBuilder: (context, index) {
-                  // Check if we need to insert a divider for "Last week"
-                  final order = orders[index];
-                  final showLastWeekHeader =
-                      index ==
-                      2; // Hardcoded based on mockup structure for exactly index 2
-
-                  return Column(
-                    children: [
-                      if (showLastWeekHeader &&
-                          controller.searchQuery.value.isEmpty)
-                        Padding(
-                          padding: EdgeInsets.symmetric(vertical: 12.h),
-                          child: Text(
-                            'last_week'.tr,
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.textSecondary,
-                              fontSize: 11.sp,
-                            ),
-                          ),
-                        ),
-                      CompletedOrderCard(
+                    // Use different card based on status
+                    if (_isCompletedStatus(statusRaw)) {
+                      return CompletedOrderCard(
                         order: order,
                         onTap: () => context.push(
                           RouteNames.orderDetail,
@@ -537,16 +344,70 @@ class OrdersScreen extends StatelessWidget {
                             'driverName': order.driverName,
                           },
                         ),
-                      ),
-                    ],
-                  );
-                },
-              );
-            }),
-          ],
+                      );
+                    } else if (_isOngoingStatus(statusRaw)) {
+                      return OngoingOrderCard(
+                        order: order,
+                        onTap: () => context.push(
+                          RouteNames.orderDetail,
+                          extra: {
+                            'backendId': order.backendId,
+                            'orderId': order.id,
+                            'customerName': order.customerName,
+                            'status': order.status,
+                            'driverName': order.driverName,
+                          },
+                        ),
+                      );
+                    } else {
+                      return OrderItemCard(
+                        order: order,
+                        onTap: () => context.push(
+                          RouteNames.orderDetail,
+                          extra: {
+                            'backendId': order.backendId,
+                            'orderId': order.id,
+                            'customerName': order.customerName,
+                            'status': order.status,
+                          },
+                        ),
+                      );
+                    }
+                  },
+                );
+              }),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  bool _isOngoingStatus(String status) {
+    const ongoing = {
+      'confirmation',
+      'accepted',
+      'confirmed',
+      'preparing',
+      'ready_for_pickup',
+      'picked_up',
+      'on_the_way',
+      'processing',
+      'assigned',
+      'waiting_pickup',
+    };
+    return ongoing.contains(status);
+  }
+
+  bool _isCompletedStatus(String status) {
+    const completed = {
+      'completed',
+      'delivered',
+      'cancelled',
+      'rejected',
+      'archived',
+    };
+    return completed.contains(status);
   }
 
   Widget _buildDailyStatsCard(OrdersController controller) {
@@ -586,12 +447,14 @@ class OrdersScreen extends StatelessWidget {
           ),
           SizedBox(height: 16.h),
           Center(
-            child: Text(
-              '${controller.newOrders.length}',
-              style: AppTextStyles.headingLarge.copyWith(
-                color: Colors.white,
-                fontSize: 40.sp,
-                height: 1,
+            child: Obx(
+              () => Text(
+                '${controller.filteredOrders.length}',
+                style: AppTextStyles.headingLarge.copyWith(
+                  color: Colors.white,
+                  fontSize: 40.sp,
+                  height: 1,
+                ),
               ),
             ),
           ),

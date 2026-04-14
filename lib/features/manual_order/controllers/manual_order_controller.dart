@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../core/storage/secure_storage.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../data/models/region_model.dart';
 import '../data/models/manual_order_request.dart';
@@ -50,6 +51,12 @@ class ManualOrderController extends GetxController {
     deliveryFeeCtrl.addListener(() {
       final value = double.tryParse(deliveryFeeCtrl.text) ?? 0.0;
       deliveryFee.value = value;
+    });
+    // when the selected region changes, fetch area-based delivery price
+    ever<int?>(selectedRegionId, (id) {
+      if (id != null) {
+        _fetchDeliveryPriceForRegion(id);
+      }
     });
   }
 
@@ -151,6 +158,39 @@ class ManualOrderController extends GetxController {
       }
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> _fetchDeliveryPriceForRegion(int regionId) async {
+    try {
+      final shopId = await SecureStorage.getShopId();
+      final resp = await _repository.fetchDeliveryPrice(
+        toRegionId: regionId,
+        shopId: shopId,
+      );
+      // backend may return data in different shapes; repository returns a Map
+      final data = resp['data'] != null
+          ? Map<String, dynamic>.from(resp['data'])
+          : Map<String, dynamic>.from(resp);
+
+      if (data['is_served'] == false) {
+        // area not served: show placeholder and set fee to 0
+        deliveryFeeCtrl.text = 'غير متوفر';
+        deliveryFee.value = 0.0;
+        return;
+      }
+
+      final price = (data['delivery_price'] != null)
+          ? double.tryParse(data['delivery_price'].toString()) ?? 0.0
+          : 0.0;
+
+      deliveryFeeCtrl.text = price.toStringAsFixed(2);
+      deliveryFee.value = price;
+    } catch (e) {
+      debugPrint('Failed to fetch delivery price: $e');
+      // On network/server failure, show friendly placeholder and use 0 value
+      deliveryFeeCtrl.text = 'غير متوفر';
+      deliveryFee.value = 0.0;
     }
   }
 }

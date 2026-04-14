@@ -3,6 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:roya/core/network/api_client.dart';
 
+import '../data/models/order_detail_model.dart';
+import '../data/models/order_modification_models.dart';
+
+class FilterOption {
+  final String value;
+  final String label;
+  final String group;
+
+  FilterOption({
+    required this.value,
+    required this.label,
+    required this.group,
+  });
+}
+
 class OrderModel {
   final int? backendId;
   final String id;
@@ -57,28 +72,201 @@ class OrderModel {
   }
 }
 
-class OrdersController extends GetxController
-    with GetSingleTickerProviderStateMixin {
-  late TabController tabController;
+class OrdersController extends GetxController {
   final isLoading = false.obs;
   final errorMessage = ''.obs;
   final Dio _dio = Get.find<DioClient>().dio;
+
+  // Filter state: 'all' or specific status value
+  final Rx<String?> selectedFilter = Rx<String?>(null);
+
+  // All available filter options grouped by category
+  final filterOptions = <FilterOption>[
+    FilterOption(value: 'all', label: 'filter_all', group: 'all'),
+    
+    // New/Pending
+    FilterOption(value: 'pending', label: 'filter_pending', group: 'new'),
+    FilterOption(value: 'accepted', label: 'filter_accepted', group: 'new'),
+    FilterOption(value: 'confirmation', label: 'filter_confirmation', group: 'new'),
+    
+    // In Progress
+    FilterOption(value: 'preparing', label: 'filter_preparing', group: 'ongoing'),
+    FilterOption(value: 'ready_for_pickup', label: 'filter_ready_for_pickup', group: 'ongoing'),
+    FilterOption(value: 'awaiting_customer_modification', label: 'filter_awaiting_customer_modification', group: 'ongoing'),
+    FilterOption(value: 'customer_modification_confirmed', label: 'filter_customer_modification_confirmed', group: 'ongoing'),
+    
+    // Logistics
+    FilterOption(value: 'picked_up', label: 'filter_picked_up', group: 'logistics'),
+    FilterOption(value: 'at_warehouse', label: 'filter_at_warehouse', group: 'logistics'),
+    
+    // Completed
+    FilterOption(value: 'completed', label: 'filter_completed', group: 'completed'),
+    FilterOption(value: 'damaged', label: 'filter_damaged', group: 'completed'),
+    
+    // Cancelled/Rejected
+    FilterOption(value: 'rejected', label: 'filter_rejected', group: 'cancelled'),
+    FilterOption(value: 'cancelled', label: 'filter_cancelled', group: 'cancelled'),
+  ].obs;
+
+  String get selectedFilterLabel {
+    final filter = selectedFilter.value;
+    if (filter == null || filter == 'all') return 'filter_all'.tr;
+    return filterOptions.firstWhere(
+      (option) => option.value == filter,
+      orElse: () => FilterOption(value: filter, label: filter, group: ''),
+    ).label.tr;
+  }
+
+  // --- Order Modification Flow ---
+  final itemReviews = <int, SubOrderItemReviewRequest>{}.obs;
+  final currentSubOrderItems = <OrderProductItem>[].obs;
+
+  bool get canSubmitReview =>
+      currentSubOrderItems.isNotEmpty &&
+      currentSubOrderItems.every((item) => itemReviews.containsKey(item.id));
+
+  void setItemReview(int itemId, SubOrderItemReviewRequest review) {
+    itemReviews[itemId] = review;
+  }
+
+  Future<void> submitItemReviews(int subOrderId) async {
+    try {
+      isLoading.value = true;
+      errorMessage.value = '';
+
+      final items = itemReviews.values.map((i) => i.toJson()).toList();
+      final response = await _dio.post(
+        '/api/shop-owner/orders/$subOrderId/review-items',
+        data: {'items': items},
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception("Failed to submit item reviews");
+      }
+
+      await fetchOrders();
+    } catch (e) {
+      if (e is DioException) {
+        final msg = (e.response?.data is Map<String, dynamic>)
+            ? (e.response?.data['message']?.toString() ?? 'فشل تقديم المراجعة')
+            : 'فشل تقديم المراجعة';
+        errorMessage.value = msg;
+      } else {
+        errorMessage.value = 'فشل تقديم المراجعة';
+      }
+      if (Get.context != null) {
+        Get.snackbar(
+          'خطأ',
+          errorMessage.value,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> confirmModification(int subOrderId) async {
+    try {
+      isLoading.value = true;
+      errorMessage.value = '';
+      final response = await _dio.post(
+        '/api/shop-owner/orders/$subOrderId/confirm-modification',
+      );
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception("Failed to confirm modifications");
+      }
+      await fetchOrders();
+    } catch (e) {
+      if (e is DioException) {
+        final msg = (e.response?.data is Map<String, dynamic>)
+            ? (e.response?.data['message']?.toString() ?? 'فشل التأكيد النهائي')
+            : 'فشل التأكيد النهائي';
+        errorMessage.value = msg;
+      } else {
+        errorMessage.value = 'فشل التأكيد النهائي';
+      }
+      if (Get.context != null) {
+        Get.snackbar(
+          'خطأ',
+          errorMessage.value,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> respondToModification(
+    int subOrderId,
+    List<RespondModificationRequest> responses,
+  ) async {
+    try {
+      isLoading.value = true;
+      errorMessage.value = '';
+      final respData = responses.map((r) => r.toJson()).toList();
+      final response = await _dio.post(
+        '/api/orders/$subOrderId/respond-modification',
+        data: {'responses': respData},
+      );
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception("Failed to send responses");
+      }
+      await fetchOrders();
+    } catch (e) {
+      if (e is DioException) {
+        final msg = (e.response?.data is Map<String, dynamic>)
+            ? (e.response?.data['message']?.toString() ??
+                  'فشل الاستجابة للتعديل')
+            : 'فشل الاستجابة للتعديل';
+        errorMessage.value = msg;
+      } else {
+        errorMessage.value = 'فشل الاستجابة للتعديل';
+      }
+      if (Get.context != null) {
+        Get.snackbar(
+          'خطأ',
+          errorMessage.value,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+    } finally {
+      isLoading.value = false;
+    }
+  }
+  // -------------------------------
 
   final RxList<OrderModel> allOrders = <OrderModel>[].obs;
   final RxString selectedOrderCategory =
       'standard'.obs; // 'standard' or 'manual'
 
-  List<OrderModel> get newOrders => allOrders
-      .where((o) => _isNewStatus(o.statusRaw) && _isCorrectCategory(o))
-      .toList();
+  // Filtered orders based on selected filter
+  List<OrderModel> get filteredOrders {
+    final filter = selectedFilter.value;
+    if (filter == null || filter == 'all') {
+      return allOrders.where((o) => _isCorrectCategory(o)).toList();
+    }
 
-  List<OrderModel> get ongoingOrders => allOrders
-      .where((o) => _isOngoingStatus(o.statusRaw) && _isCorrectCategory(o))
-      .toList();
+    return allOrders.where((o) {
+      if (!_isCorrectCategory(o)) return false;
+      return o.statusRaw == filter;
+    }).toList();
+  }
 
-  List<OrderModel> get completedOrders => allOrders
-      .where((o) => _isCompletedStatus(o.statusRaw) && _isCorrectCategory(o))
-      .toList();
+  // Keep the old getters for backward compatibility if needed
+  List<OrderModel> get newOrders =>
+      allOrders.where((o) => _isNewStatus(o.statusRaw) && _isCorrectCategory(o)).toList();
+  List<OrderModel> get ongoingOrders =>
+      allOrders.where((o) => _isOngoingStatus(o.statusRaw) && _isCorrectCategory(o)).toList();
+  List<OrderModel> get completedOrders =>
+      allOrders.where((o) => _isCompletedStatus(o.statusRaw) && _isCorrectCategory(o)).toList();
 
   bool _isCorrectCategory(OrderModel o) {
     if (selectedOrderCategory.value == 'manual') {
@@ -113,7 +301,6 @@ class OrdersController extends GetxController
   @override
   void onInit() {
     super.onInit();
-    tabController = TabController(length: 3, vsync: this);
     fetchOrders();
   }
 
@@ -367,7 +554,6 @@ class OrdersController extends GetxController
 
   @override
   void onClose() {
-    tabController.dispose();
     super.onClose();
   }
 }

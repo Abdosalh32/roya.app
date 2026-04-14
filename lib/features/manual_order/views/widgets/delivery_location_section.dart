@@ -109,6 +109,37 @@ class DeliveryLocationSection extends GetView<ManualOrderController> {
           ),
         ),
         SizedBox(height: 12.h),
+        // Delivery price (read-only) placed under the area selection
+        SizedBox(height: 12.h),
+        TextFormField(
+          controller: controller.deliveryFeeCtrl,
+          readOnly: true,
+          decoration: InputDecoration(
+            labelText: 'سعر التوصيل',
+            labelStyle: AppTextStyles.bodyMedium,
+            suffixText: 'د.ل',
+            prefixIcon: const Icon(
+              Icons.local_shipping_outlined,
+              color: AppColors.textSecondary,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: const BorderSide(color: AppColors.primary),
+            ),
+            filled: true,
+            fillColor: AppColors.card,
+          ),
+        ),
+
+        SizedBox(height: 12.h),
         TextFormField(
           controller: controller.deliveryNotesCtrl,
           maxLines: 2,

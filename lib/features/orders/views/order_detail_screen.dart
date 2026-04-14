@@ -10,6 +10,8 @@ import 'package:roya/features/orders/controllers/orders_controller.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../data/models/order_detail_model.dart';
+import '../data/models/order_modification_models.dart';
+import 'widgets/modification/shop_owner_item_review_row.dart';
 import 'widgets/order_details_components.dart';
 
 class OrderDetailScreen extends StatefulWidget {
@@ -65,6 +67,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     detail = OrderDetailModel(
       orderNumber: widget.orderId.length > 10 ? 'RY177016#' : widget.orderId,
       status: currentStatus,
+      statusRaw: widget.initialStatus ?? 'pending',
       date: '24 مايو 2026 • 04:30 مساءً',
       deliveryType: 'delivery',
       customerName: initialName,
@@ -172,38 +175,45 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     final region = json['region'] as Map<String, dynamic>?;
     final isAr = Get.locale?.languageCode != 'en';
     final items = (json['items'] is List)
-        ? (json['items'] as List)
-              .whereType<Map<String, dynamic>>()
-              .map(
-                (item) => OrderProductItem(
-                  name:
-                      ((isAr
-                                  ? item['product_name_ar']
-                                  : item['product_name_en']) ??
-                              item['product_name'] ??
-                              item['name'] ??
-                              'منتج')
-                          .toString(),
-                  quantity: item['quantity'] is int
-                      ? item['quantity'] as int
-                      : int.tryParse((item['quantity'] ?? '1').toString()) ?? 1,
-                  price: item['unit_price'] is num
-                      ? (item['unit_price'] as num).toDouble()
-                      : item['price'] is num
-                      ? (item['price'] as num).toDouble()
-                      : double.tryParse(
-                              (item['unit_price'] ??
-                                      item['price'] ??
-                                      item['subtotal'] ??
-                                      '0')
-                                  .toString(),
-                            ) ??
-                            0,
-                  imageUrl: (item['product_image_url'] ?? item['image_url'])
-                      ?.toString(),
-                ),
-              )
-              .toList()
+        ? (json['items'] as List).whereType<Map<String, dynamic>>().map((item) {
+            SubOrderItemReview? reviewModel;
+            if (item['review'] != null) {
+              reviewModel = SubOrderItemReview.fromJson(item['review']);
+            } else {
+              // try fetch from reviews list if parsing full reviews
+              // Since we don't have access to global reviews here easily, we rely on backend injecting it or fetch it separately below.
+            }
+
+            return OrderProductItem(
+              id: (item['id'] is int)
+                  ? item['id']
+                  : int.tryParse(item['id']?.toString() ?? ''),
+              review: reviewModel,
+              name:
+                  ((isAr ? item['product_name_ar'] : item['product_name_en']) ??
+                          item['product_name'] ??
+                          item['name'] ??
+                          'منتج')
+                      .toString(),
+              quantity: item['quantity'] is int
+                  ? item['quantity'] as int
+                  : int.tryParse((item['quantity'] ?? '1').toString()) ?? 1,
+              price: item['unit_price'] is num
+                  ? (item['unit_price'] as num).toDouble()
+                  : item['price'] is num
+                  ? (item['price'] as num).toDouble()
+                  : double.tryParse(
+                          (item['unit_price'] ??
+                                  item['price'] ??
+                                  item['subtotal'] ??
+                                  '0')
+                              .toString(),
+                        ) ??
+                        0,
+              imageUrl: (item['product_image_url'] ?? item['image_url'])
+                  ?.toString(),
+            );
+          }).toList()
         : detail.products;
 
     final subtotal = _toDouble(
@@ -218,6 +228,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     detail = OrderDetailModel(
       orderNumber: orderNumber.endsWith('#') ? orderNumber : '$orderNumber#',
       status: _statusLabel(statusRaw),
+      statusRaw: statusRaw,
       date: createdAt != null
           ? '${createdAt.day}/${createdAt.month}/${createdAt.year} • ${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}'
           : detail.date,
@@ -251,6 +262,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 (json['driver'] as Map<String, dynamic>?)?['name'] ??
                 selectedDriver)
             ?.toString();
+
+    try {
+      final controller = Get.find<OrdersController>();
+      controller.currentSubOrderItems.assignAll(items);
+    } catch (_) {}
   }
 
   int? _extractActionId(Map<String, dynamic> json) {
@@ -754,19 +770,139 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         SizedBox(height: 16.h),
 
                         // Products Card
-                        ProductsListCard(
-                          products: detail.products
-                              .map(
-                                (p) => ProductItemData(
-                                  name: p.name,
-                                  quantity: p.quantity,
-                                  price: p.price,
-                                  imageUrl: p.imageUrl,
+                        if (detail.statusRaw == 'pending' ||
+                            detail.statusRaw == 'new')
+                          Container(
+                            decoration: BoxDecoration(
+                              color: AppColors.card,
+                              borderRadius: BorderRadius.circular(16.r),
+                            ),
+                            padding: EdgeInsets.all(16.w),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'المنتجات (مراجعة)',
+                                  style: AppTextStyles.headingSmall,
                                 ),
-                              )
-                              .toList(),
-                          currency: 'د.ل',
-                        ),
+                                SizedBox(height: 12.h),
+                                Obx(() {
+                                  final controller =
+                                      Get.find<OrdersController>();
+                                  return Column(
+                                    children: detail.products.map((item) {
+                                      final id = item.id ?? 0;
+                                      return ShopOwnerItemReviewRow(
+                                        productName: item.name,
+                                        productImage: item.imageUrl,
+                                        quantity: item.quantity,
+                                        price: item.price,
+                                        currentReview:
+                                            controller.itemReviews[id],
+                                        onReviewed: (review) {
+                                          final realReview =
+                                              SubOrderItemReviewRequest(
+                                                subOrderItemId: id,
+                                                status: review.status,
+                                                rejectionType:
+                                                    review.rejectionType,
+                                                substituteName:
+                                                    review.substituteName,
+                                              );
+                                          controller.setItemReview(
+                                            id,
+                                            realReview,
+                                          );
+                                        },
+                                      );
+                                    }).toList(),
+                                  );
+                                }),
+                              ],
+                            ),
+                          )
+                        else if (detail.statusRaw ==
+                            'awaiting_customer_modification')
+                          Column(
+                            children: [
+                              Container(
+                                width: double.infinity,
+                                padding: EdgeInsets.all(16.w),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.shade50,
+                                  borderRadius: BorderRadius.circular(12.r),
+                                ),
+                                child: Text(
+                                  'في انتظار رد الزبون على التعديلات',
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    color: Colors.orange.shade900,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 16.h),
+                              ProductsListCard(
+                                products: detail.products
+                                    .map(
+                                      (p) => ProductItemData(
+                                        name: p.name,
+                                        quantity: p.quantity,
+                                        price: p.price,
+                                        imageUrl: p.imageUrl,
+                                      ),
+                                    )
+                                    .toList(),
+                                currency: 'د.ل',
+                              ),
+                            ],
+                          )
+                        else if (detail.statusRaw ==
+                            'customer_modification_confirmed')
+                          Column(
+                            children: [
+                              Container(
+                                width: double.infinity,
+                                padding: EdgeInsets.all(16.w),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.shade50,
+                                  borderRadius: BorderRadius.circular(12.r),
+                                ),
+                                child: Text(
+                                  'الزبون قبل التعديلات ✅',
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    color: Colors.green.shade900,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 16.h),
+                              ProductsListCard(
+                                products: detail.products
+                                    .map(
+                                      (p) => ProductItemData(
+                                        name: p.name,
+                                        quantity: p.quantity,
+                                        price: p.price,
+                                        imageUrl: p.imageUrl,
+                                      ),
+                                    )
+                                    .toList(),
+                                currency: 'د.ل',
+                              ),
+                            ],
+                          )
+                        else
+                          ProductsListCard(
+                            products: detail.products
+                                .map(
+                                  (p) => ProductItemData(
+                                    name: p.name,
+                                    quantity: p.quantity,
+                                    price: p.price,
+                                    imageUrl: p.imageUrl,
+                                  ),
+                                )
+                                .toList(),
+                            currency: 'د.ل',
+                          ),
                         SizedBox(height: 16.h),
 
                         // Delivery Info Card
@@ -808,6 +944,61 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Widget _buildActionButtons() {
+    if (detail.statusRaw == 'awaiting_customer_modification') {
+      return const SizedBox.shrink(); // No action buttons
+    }
+
+    if (detail.statusRaw == 'pending' || detail.statusRaw == 'new') {
+      return Obx(() {
+        final controller = Get.find<OrdersController>();
+        return ElevatedButton(
+          onPressed: controller.canSubmitReview
+              ? () {
+                  final id = detail.backendId ?? _actionOrderId;
+                  if (id != null) controller.submitItemReviews(id);
+                }
+              : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            padding: EdgeInsets.symmetric(vertical: 14.h),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+          ),
+          child: Text(
+            'قبول الطلب',
+            style: AppTextStyles.headingSmall.copyWith(
+              color: Colors.white,
+              fontSize: 14.sp,
+            ),
+          ),
+        );
+      });
+    }
+
+    if (detail.statusRaw == 'customer_modification_confirmed') {
+      return ElevatedButton(
+        onPressed: () {
+          final id = detail.backendId ?? _actionOrderId;
+          if (id != null) Get.find<OrdersController>().confirmModification(id);
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          padding: EdgeInsets.symmetric(vertical: 14.h),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+        ),
+        child: Text(
+          'تأكيد الطلب نهائياً',
+          style: AppTextStyles.headingSmall.copyWith(
+            color: Colors.white,
+            fontSize: 14.sp,
+          ),
+        ),
+      );
+    }
+
     // 1. New Order Logic
     if (currentStatus == 'status_new'.tr) {
       return Row(

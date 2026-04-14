@@ -45,8 +45,8 @@ class MainShell extends StatelessWidget {
           ),
           items: [
             BottomNavigationBarItem(
-              icon: const Icon(Icons.home_rounded),
-              label: 'nav_home'.tr,
+              icon: const Icon(Icons.dashboard_rounded),
+              label: 'nav_main'.tr,
             ),
             BottomNavigationBarItem(
               icon: const Icon(Icons.receipt_long_rounded),

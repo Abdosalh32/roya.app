@@ -17,6 +17,7 @@ import '../../features/orders/controllers/orders_controller.dart';
 import '../../features/orders/data/models/order_detail_model.dart';
 import '../../features/orders/views/completed_order_detail_screen.dart';
 import '../../features/orders/views/order_detail_screen.dart';
+import '../../features/orders/views/order_modification_screen.dart';
 import '../../features/orders/views/orders_screen.dart';
 import '../../features/payouts/bindings/payouts_binding.dart';
 import '../../features/payouts/data/models/payout_model.dart';
@@ -77,6 +78,19 @@ class AppRouter {
 
       // ─── صفحة تفاصيل الطلب المكتمل ───
       GoRoute(
+        path: RouteNames.orderModification,
+        name: 'orderModification',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>? ?? {};
+          return OrderModificationScreen(
+            subOrderId: extra['subOrderId'] is int
+                ? extra['subOrderId'] as int
+                : int.tryParse(extra['subOrderId']?.toString() ?? '') ?? 0,
+          );
+        },
+      ),
+
+      GoRoute(
         path: RouteNames.completedOrderDetail,
         name: 'completedOrderDetail',
         builder: (context, state) {
@@ -85,6 +99,7 @@ class AppRouter {
             order: OrderDetailModel(
               orderNumber: 'RY177484#',
               status: order.status,
+              statusRaw: order.statusRaw,
               date: order.date ?? '24 مايو 2026',
               deliveryType: order.orderType,
               customerName: order.customerName,

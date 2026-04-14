@@ -129,6 +129,7 @@ class Product {
   final double? comparePrice;
   final bool isActive;
   final int sortOrder;
+  final int? quantity;
   final List<ProductImage> images;
   final List<ProductVariantType> variantTypes;
   final String? primaryImage;
@@ -145,6 +146,7 @@ class Product {
     this.comparePrice,
     required this.isActive,
     this.sortOrder = 0,
+    this.quantity,
     this.images = const [],
     this.variantTypes = const [],
     this.primaryImage,
@@ -162,6 +164,7 @@ class Product {
     double? comparePrice,
     bool? isActive,
     int? sortOrder,
+    int? quantity,
     List<ProductImage>? images,
     List<ProductVariantType>? variantTypes,
     String? primaryImage,
@@ -178,6 +181,7 @@ class Product {
       comparePrice: comparePrice ?? this.comparePrice,
       isActive: isActive ?? this.isActive,
       sortOrder: sortOrder ?? this.sortOrder,
+      quantity: quantity ?? this.quantity,
       images: images ?? this.images,
       variantTypes: variantTypes ?? this.variantTypes,
       primaryImage: primaryImage ?? this.primaryImage,
@@ -200,6 +204,7 @@ class Product {
         : null,
     isActive: (json['is_active'] as bool?) ?? true,
     sortOrder: json['sort_order'] as int? ?? 0,
+    quantity: json['quantity'] as int?,
     primaryImage: json['primary_image'] as String?,
     images:
         (json['images'] as List<dynamic>?)
@@ -225,6 +230,7 @@ class Product {
     'compare_price': comparePrice,
     'is_active': isActive,
     'sort_order': sortOrder,
+    'quantity': quantity,
     'images': images.map((i) => i.toJson()).toList(),
     'variant_types': variantTypes.map((t) => t.toJson()).toList(),
   };
