@@ -29,6 +29,7 @@ class OrderModel {
   final String timeElapsed;
   final int itemCount;
   final String? driverName;
+  final String? distributorDriverName;
   final String orderType; // 'delivery' | 'pickup'
 
   final String? customerAddress;
@@ -46,13 +47,14 @@ class OrderModel {
     required this.timeElapsed,
     this.itemCount = 1,
     this.driverName,
+    this.distributorDriverName,
     this.orderType = 'delivery',
     this.customerAddress,
     this.driverAvatar,
     this.date,
   });
 
-  OrderModel copyWith({String? driverName, String? status}) {
+  OrderModel copyWith({String? driverName, String? distributorDriverName, String? status}) {
     return OrderModel(
       backendId: backendId,
       id: id,
@@ -64,6 +66,7 @@ class OrderModel {
       timeElapsed: timeElapsed,
       itemCount: itemCount,
       driverName: driverName ?? this.driverName,
+      distributorDriverName: distributorDriverName ?? this.distributorDriverName,
       orderType: orderType,
       customerAddress: customerAddress,
       driverAvatar: driverAvatar,
@@ -420,6 +423,9 @@ class OrdersController extends GetxController {
     final driverName = driverMap?['name']?.toString();
     final driverAvatar = driverMap?['avatar']?.toString();
 
+    final distributorDriverMap = json['distributor_driver'] as Map<String, dynamic>?;
+    final distributorDriverName = distributorDriverMap?['name']?.toString();
+
     final itemsCount = (json['item_count'] is int)
         ? json['item_count'] as int
         : (json['items_count'] is int)
@@ -453,6 +459,7 @@ class OrdersController extends GetxController {
       timeElapsed: elapsed,
       itemCount: itemsCount,
       driverName: driverName,
+      distributorDriverName: distributorDriverName,
       orderType: deducedOrderType,
       customerAddress: regionName,
       driverAvatar: driverAvatar,

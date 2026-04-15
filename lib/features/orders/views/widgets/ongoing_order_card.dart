@@ -12,6 +12,13 @@ class OngoingOrderCard extends StatelessWidget {
 
   const OngoingOrderCard({super.key, required this.order, this.onTap});
 
+  String? get _displayDriverName {
+    if (order.statusRaw == 'on_the_way' || order.statusRaw == 'delivering') {
+      return order.distributorDriverName;
+    }
+    return order.driverName;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -181,7 +188,7 @@ class OngoingOrderCard extends StatelessWidget {
               // ─── الصف السفلي: سائق / تعيين سائق ───
               Padding(
                 padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 14.h),
-                child: order.driverName != null
+                child: _displayDriverName != null
                     ? _buildDriverAssigned()
                     : _buildDriverNotAssigned(),
               ),
@@ -205,7 +212,7 @@ class OngoingOrderCard extends StatelessWidget {
         // Driver info
         Expanded(
           child: Text(
-            '${'driver_prefix'.tr} ${order.driverName}',
+            '${'driver_prefix'.tr} $_displayDriverName',
             style: AppTextStyles.bodyMedium.copyWith(
               color: AppColors.textPrimary,
               fontSize: 13.sp,
