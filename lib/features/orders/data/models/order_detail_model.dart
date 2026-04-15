@@ -14,6 +14,8 @@ class OrderDetailModel {
   final String customerPhone;
   final String? driverName;
   final String? driverPhone;
+  final String? distributorDriverName;
+  final String? distributorDriverPhone;
   final List<OrderProductItem> products;
   final List<SubOrderItemReview>? reviews;
   final String paymentMethod;
@@ -34,6 +36,8 @@ class OrderDetailModel {
     required this.customerPhone,
     this.driverName,
     this.driverPhone,
+    this.distributorDriverName,
+    this.distributorDriverPhone,
     required this.products,
     required this.paymentMethod,
     required this.subtotal,

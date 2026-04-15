@@ -229,6 +229,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     final statusRaw = (json['status'] ?? '').toString().toLowerCase();
 
     final driver = json['collector_driver'] as Map<String, dynamic>?;
+    final distributorDriver = json['distributor_driver'] as Map<String, dynamic>?;
 
     detail = OrderDetailModel(
       orderNumber: orderNumber.endsWith('#') ? orderNumber : '$orderNumber#',
@@ -258,6 +259,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       ),
       driverPhone: _cleanString(
         driver?['phone'],
+      ),
+      distributorDriverName: _cleanString(
+        distributorDriver?['name'],
+      ),
+      distributorDriverPhone: _cleanString(
+        distributorDriver?['phone'],
       ),
       products: items,
       paymentMethod: (json['payment_method'] ?? detail.paymentMethod)
@@ -461,6 +468,91 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   Future<void> _copyDriverPhone() async {
     final phone = detail.driverPhone?.trim();
+    if (phone == null || phone.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('رقم الهاتف غير متوفر')));
+      }
+      return;
+    }
+
+    await Clipboard.setData(ClipboardData(text: phone));
+    if (mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('تم نسخ رقم الهاتف')));
+    }
+  }
+
+  Future<void> _callDistributorDriver() async {
+    final rawPhone = detail.distributorDriverPhone;
+    if (rawPhone == null || rawPhone.trim().isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('رقم الهاتف غير متوفر')));
+      }
+      return;
+    }
+
+    final phone = rawPhone.replaceAll(RegExp(r'[^0-9+]'), '');
+
+    if (phone.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('رقم الهاتف غير متوفر')));
+      }
+      return;
+    }
+
+    final uri = Uri(scheme: 'tel', path: phone);
+
+    try {
+      final canLaunch = await canLaunchUrl(uri);
+      if (!canLaunch) {
+        await Clipboard.setData(ClipboardData(text: phone));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('هذا الجهاز لا يدعم الاتصال. تم نسخ الرقم للحافظة'),
+            ),
+          );
+        }
+        return;
+      }
+
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+
+      if (!launched && mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('تعذر فتح تطبيق الهاتف')));
+      }
+    } on PlatformException catch (_) {
+      await Clipboard.setData(ClipboardData(text: phone));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تعذر فتح الاتصال الآن. تم نسخ الرقم للحافظة'),
+          ),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('حدث خطأ أثناء محاولة الاتصال')),
+        );
+      }
+    }
+  }
+
+  Future<void> _copyDistributorDriverPhone() async {
+    final phone = detail.distributorDriverPhone?.trim();
     if (phone == null || phone.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -775,9 +867,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 ? const Center(child: CircularProgressIndicator())
                 : _errorMessage.isNotEmpty
                 ? Center(child: Text(_errorMessage))
-                : SingleChildScrollView(
-                    padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 0),
-                    child: Column(
+                : RefreshIndicator(
+                    onRefresh: _fetchDetail,
+                    color: AppColors.primary,
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 0),
+                      child: Column(
                       children: [
                         // Timeline
                         OrderStatusTimeline(
@@ -786,14 +882,30 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         SizedBox(height: 16.h),
 
                         // Driver Card
-                        if (detail.driverName != null)
+                        // Show distributor driver when status is delivering, otherwise show collector
+                        if (detail.driverName != null && 
+                            (detail.statusRaw != 'on_the_way' && detail.statusRaw != 'delivering'))
                           DriverInfoCard(
                             name: detail.driverName!,
                             phone: detail.driverPhone,
                             onCall: detail.driverPhone != null ? _callDriver : null,
                             onCopyPhone: detail.driverPhone != null ? _copyDriverPhone : null,
                           ),
-                        if (detail.driverName != null) SizedBox(height: 16.h),
+                        if (detail.driverName != null && 
+                            (detail.statusRaw != 'on_the_way' && detail.statusRaw != 'delivering'))
+                          SizedBox(height: 16.h),
+                        // Show distributor driver when status is delivering
+                        if (detail.distributorDriverName != null && 
+                            (detail.statusRaw == 'on_the_way' || detail.statusRaw == 'delivering'))
+                          DriverInfoCard(
+                            name: detail.distributorDriverName!,
+                            phone: detail.distributorDriverPhone,
+                            onCall: detail.distributorDriverPhone != null ? _callDistributorDriver : null,
+                            onCopyPhone: detail.distributorDriverPhone != null ? _copyDistributorDriverPhone : null,
+                          ),
+                        if (detail.distributorDriverName != null && 
+                            (detail.statusRaw == 'on_the_way' || detail.statusRaw == 'delivering'))
+                          SizedBox(height: 16.h),
 
                         // Products Card
                         if (detail.statusRaw == 'pending' ||
@@ -940,6 +1052,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       ],
                     ),
                   ),
+                  ),
           ),
         ],
       ),
@@ -979,9 +1092,15 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         final controller = Get.find<OrdersController>();
         return ElevatedButton(
           onPressed: controller.canSubmitReview
-              ? () {
+              ? () async {
                   final id = detail.backendId ?? _actionOrderId;
-                  if (id != null) controller.submitItemReviews(id);
+                  if (id != null) {
+                    await controller.submitItemReviews(id);
+                    // Refresh the order detail after successful submission
+                    if (mounted) {
+                      await _fetchDetail();
+                    }
+                  }
                 }
               : null,
           style: ElevatedButton.styleFrom(

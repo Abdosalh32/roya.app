@@ -98,6 +98,7 @@ class OrdersController extends GetxController {
     // Logistics
     FilterOption(value: 'picked_up', label: 'filter_picked_up', group: 'logistics'),
     FilterOption(value: 'at_warehouse', label: 'filter_at_warehouse', group: 'logistics'),
+    FilterOption(value: 'on_the_way', label: 'filter_on_the_way', group: 'logistics'),
     
     // Completed
     FilterOption(value: 'completed', label: 'filter_completed', group: 'completed'),
@@ -473,6 +474,7 @@ class OrdersController extends GetxController {
       'ready_for_pickup',
       'picked_up',
       'on_the_way',
+      'delivering',
       'processing',
       'assigned',
       'waiting_pickup',
@@ -502,6 +504,8 @@ class OrdersController extends GetxController {
     if (status == 'waiting_pickup' || status == 'ready_for_pickup') {
       return 'ongoing_status_waiting_pickup'.tr;
     }
+    if (status == 'on_the_way' || status == 'delivering')
+      return 'status_delivering'.tr;
     if (_isOngoingStatus(status)) return 'ongoing_status_waiting_confirm'.tr;
     if (status == 'completed' || status == 'delivered')
       return 'status_delivered_badge'.tr;
