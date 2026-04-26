@@ -11,8 +11,260 @@ import 'widgets/completed_order_card.dart';
 import 'widgets/ongoing_order_card.dart';
 import 'widgets/order_item_card.dart';
 
-class OrdersScreen extends StatelessWidget {
+class _FilterDropdown extends StatefulWidget {
+  final OrdersController controller;
+  final VoidCallback onClose;
+
+  const _FilterDropdown({
+    required this.controller,
+    required this.onClose,
+  });
+
+  @override
+  State<_FilterDropdown> createState() => _FilterDropdownState();
+}
+
+class _FilterDropdownState extends State<_FilterDropdown> {
+  final Map<String, bool> _expanded = {};
+
+  @override
+  Widget build(BuildContext context) {
+    final groups = <String, List<FilterOption>>{};
+    for (final option in widget.controller.filterOptions) {
+      groups.putIfAbsent(option.group, () => []).add(option);
+    }
+
+    final sortedEntries = groups.entries.toList()
+      ..sort((a, b) {
+        const order = ['all', 'new', 'ongoing', 'logistics', 'completed', 'cancelled'];
+        return order.indexOf(a.key).compareTo(order.indexOf(b.key));
+      });
+
+    return Material(
+      elevation: 8,
+      borderRadius: BorderRadius.circular(12.r),
+      color: AppColors.card,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.6,
+          maxWidth: MediaQuery.of(context).size.width - 40.w,
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12.r),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: sortedEntries.map((entry) {
+                if (entry.key == 'all') {
+                  final option = entry.value.first;
+                  final isSelected = widget.controller.selectedFilter.value == 'all' ||
+                      widget.controller.selectedFilter.value == null;
+                  return _buildOptionTile(option, isSelected);
+                }
+                return _buildGroupTile(entry.key, entry.value);
+              }).toList(),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGroupTile(String group, List<FilterOption> options) {
+    final isExpanded = _expanded[group] ?? false;
+    final hasSelectedChild = options.any(
+      (o) => widget.controller.selectedFilter.value == o.value,
+    );
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        InkWell(
+          onTap: () {
+            setState(() {
+              _expanded[group] = !isExpanded;
+            });
+          },
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
+              ),
+            ),
+            child: Row(
+              children: [
+                AnimatedRotation(
+                  turns: isExpanded ? 0.25 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    Icons.chevron_right_rounded,
+                    color: hasSelectedChild ? AppColors.primary : AppColors.textSecondary,
+                    size: 20.sp,
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: Text(
+                    _getGroupLabel(group),
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: hasSelectedChild ? AppColors.primary : AppColors.textPrimary,
+                      fontWeight: hasSelectedChild ? FontWeight.bold : FontWeight.w600,
+                    ),
+                  ),
+                ),
+                if (hasSelectedChild)
+                  Container(
+                    width: 8.w,
+                    height: 8.w,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        AnimatedCrossFade(
+          firstChild: const SizedBox.shrink(),
+          secondChild: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: options.map((option) {
+              final isSelected = widget.controller.selectedFilter.value == option.value;
+              return _buildOptionTile(option, isSelected, isSubOption: true);
+            }).toList(),
+          ),
+          crossFadeState: isExpanded
+              ? CrossFadeState.showSecond
+              : CrossFadeState.showFirst,
+          duration: const Duration(milliseconds: 200),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOptionTile(FilterOption option, bool isSelected, {bool isSubOption = false}) {
+    return InkWell(
+      onTap: () {
+        widget.controller.selectedFilter.value = option.value;
+        widget.onClose();
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: isSubOption ? 32.w : 16.w,
+          vertical: 12.h,
+        ),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary.withValues(alpha: 0.08) : null,
+          border: Border(
+            bottom: BorderSide(
+              color: AppColors.border.withValues(alpha: 0.3),
+            ),
+          ),
+        ),
+        child: Row(
+          children: [
+            if (isSelected)
+              Icon(
+                Icons.check_circle_rounded,
+                color: AppColors.primary,
+                size: 20.sp,
+              )
+            else
+              SizedBox(width: 20.w),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Text(
+                option.label.tr,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _getGroupLabel(String group) {
+    switch (group) {
+      case 'all':
+        return 'filter_all'.tr;
+      case 'new':
+        return 'group_new'.tr;
+      case 'ongoing':
+        return 'group_ongoing'.tr;
+      case 'logistics':
+        return 'group_logistics'.tr;
+      case 'completed':
+        return 'group_completed'.tr;
+      case 'cancelled':
+        return 'group_cancelled'.tr;
+      default:
+        return group;
+    }
+  }
+}
+
+class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
+
+  @override
+  State<OrdersScreen> createState() => _OrdersScreenState();
+}
+
+class _OrdersScreenState extends State<OrdersScreen> {
+  final LayerLink _filterLayerLink = LayerLink();
+  final GlobalKey _filterButtonKey = GlobalKey();
+  OverlayEntry? _filterOverlay;
+
+  void _showFilterMenu(OrdersController controller) {
+    _hideFilterMenu();
+
+    final overlay = Overlay.of(context);
+    final renderBox = _filterButtonKey.currentContext?.findRenderObject() as RenderBox?;
+    final buttonHeight = renderBox?.size.height ?? 48;
+
+    _filterOverlay = OverlayEntry(
+      builder: (context) => GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: _hideFilterMenu,
+        child: Stack(
+          children: [
+            Positioned.fill(child: Container(color: Colors.transparent)),
+            CompositedTransformFollower(
+              link: _filterLayerLink,
+              showWhenUnlinked: false,
+              offset: Offset(0, buttonHeight + 4),
+              child: Material(
+                color: Colors.transparent,
+                child: _FilterDropdown(
+                  controller: controller,
+                  onClose: _hideFilterMenu,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    overlay.insert(_filterOverlay!);
+  }
+
+  void _hideFilterMenu() {
+    _filterOverlay?.remove();
+    _filterOverlay = null;
+  }
+
+  @override
+  void dispose() {
+    _hideFilterMenu();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -136,141 +388,53 @@ class OrdersScreen extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20.w),
       child: Obx(
-        () => PopupMenuButton<String>(
-          onSelected: (value) {
-            controller.selectedFilter.value = value;
-          },
-          itemBuilder: (context) {
-            final groups = <String, List<FilterOption>>{};
-            for (final option in controller.filterOptions) {
-              groups.putIfAbsent(option.group, () => []).add(option);
-            }
-
-            final items = <PopupMenuEntry<String>>[];
-            for (final entry in groups.entries) {
-              // Add group header (except for 'all')
-              if (entry.key != 'all' && entry.value.isNotEmpty) {
-                items.add(
-                  PopupMenuItem<String>(
-                    enabled: false,
-                    child: Text(
-                      _getGroupLabel(entry.key),
-                      style: AppTextStyles.bodySmall.copyWith(
+        () => CompositedTransformTarget(
+          link: _filterLayerLink,
+          child: GestureDetector(
+            onTap: () => _showFilterMenu(controller),
+            child: Container(
+              key: _filterButtonKey,
+              padding: EdgeInsets.symmetric(
+                horizontal: 16.w,
+                vertical: 12.h,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.card,
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.filter_list_rounded,
                         color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12.sp,
+                        size: 20.sp,
                       ),
-                    ),
-                  ),
-                );
-              }
-
-              // Add options in this group
-              for (final option in entry.value) {
-                final isSelected = controller.selectedFilter.value == option.value ||
-                    (controller.selectedFilter.value == null && option.value == 'all');
-
-                items.add(
-                  PopupMenuItem<String>(
-                    value: option.value,
-                    child: Row(
-                      children: [
-                        if (isSelected)
-                          Icon(
-                            Icons.check_circle_rounded,
-                            color: AppColors.primary,
-                            size: 20.sp,
-                          )
-                        else
-                          SizedBox(width: 20.sp),
-                        SizedBox(width: 12.w),
-                        Expanded(
-                          child: Text(
-                            option.label.tr,
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: isSelected
-                                  ? AppColors.primary
-                                  : AppColors.textPrimary,
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                            ),
-                          ),
+                      SizedBox(width: 8.w),
+                      Text(
+                        controller.selectedFilterLabel,
+                        style: AppTextStyles.headingSmall.copyWith(
+                          color: AppColors.textPrimary,
+                          fontSize: 14.sp,
                         ),
-                      ],
-                    ),
-                  ),
-                );
-              }
-
-              // Add divider between groups
-              if (entry.key != groups.keys.last) {
-                items.add(const PopupMenuDivider());
-              }
-            }
-
-            return items;
-          },
-          child: Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: 16.w,
-              vertical: 12.h,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.card,
-              borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.filter_list_rounded,
-                      color: AppColors.primary,
-                      size: 20.sp,
-                    ),
-                    SizedBox(width: 8.w),
-                    Text(
-                      controller.selectedFilterLabel,
-                      style: AppTextStyles.headingSmall.copyWith(
-                        color: AppColors.textPrimary,
-                        fontSize: 14.sp,
                       ),
-                    ),
-                  ],
-                ),
-                Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  color: AppColors.textSecondary,
-                  size: 20.sp,
-                ),
-              ],
+                    ],
+                  ),
+                  Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    color: AppColors.textSecondary,
+                    size: 20.sp,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
-  }
-
-  String _getGroupLabel(String group) {
-    switch (group) {
-      case 'all':
-        return 'filter_all'.tr;
-      case 'new':
-        return 'group_new'.tr;
-      case 'ongoing':
-        return 'group_ongoing'.tr;
-      case 'logistics':
-        return 'group_logistics'.tr;
-      case 'completed':
-        return 'group_completed'.tr;
-      case 'cancelled':
-        return 'group_cancelled'.tr;
-      default:
-        return group;
-    }
   }
 
   Widget _buildOrdersList(OrdersController controller) {
